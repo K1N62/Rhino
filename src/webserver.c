@@ -11,5 +11,5 @@
 int main() {
   printf("%s\n", "Hello World");
 
-  exit(0);
+  exit(1);
 }
