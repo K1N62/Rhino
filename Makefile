@@ -5,11 +5,12 @@ SRC_DIR = src
 OBJ_DIR = objects
 CFLAGS = -g -Wall -I$(INC_DIR)
 LDFLAGS =
-SRCS = $(SRC_DIR)/webserver.c
-OBJS = $(OBJ_DIR)/webserver.o
+SRCS = $(SRC_DIR)/main.c
+OBJS = $(OBJ_DIR)/main.o
 PROG = webserver
 RM = /bin/rm
 
+# Compile all
 all: $(PROG)
 
 $(PROG): $(OBJS)
