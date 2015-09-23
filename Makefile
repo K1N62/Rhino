@@ -5,9 +5,9 @@ SRC_DIR = src
 OBJ_DIR = objects
 CFLAGS = -g -Wall -I$(INC_DIR)
 LDFLAGS =
-SRCS = $(SRC_DIR)/main.c
-OBJS = $(OBJ_DIR)/main.o
-PROG = webserver
+SRCS = $(SRC_DIR)/httpd.c
+OBJS = $(OBJ_DIR)/httpd.o
+PROG = httpd
 RM = /bin/rm
 
 # Compile all
