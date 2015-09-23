@@ -7,7 +7,7 @@ CFLAGS = -g -Wall -I$(INC_DIR)
 LDFLAGS =
 SRCS = $(SRC_DIR)/httpd.c
 OBJS = $(OBJ_DIR)/httpd.o
-PROG = httpd
+PROG = bin/httpd
 RM = /bin/rm
 
 # Compile all
