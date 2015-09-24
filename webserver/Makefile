@@ -5,8 +5,8 @@ SRC_DIR = src
 OBJ_DIR = objects
 CFLAGS = -g -Wall -I$(INC_DIR)
 LDFLAGS =
-SRCS = $(SRC_DIR)/httpd.c
-OBJS = $(OBJ_DIR)/httpd.o
+SRCS = $(SRC_DIR)/httpd.c $(SRC_DIR)/utility.c
+OBJS = $(OBJ_DIR)/httpd.o $(OBJ_DIR)/utility.o
 PROG = bin/httpd
 RM = /bin/rm
 
