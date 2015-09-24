@@ -6,9 +6,9 @@
 
 void daemonfunc(const char *cmd)
 {
-  /*  int                 i, fd0, fd1, fd2*/;
-    pid_t               pid;
-    //struct rlimit       rl;
+    int i, fd0, fd1, fd2;
+    pid_t pid;
+    struct rlimit       rl;
     struct sigaction    sa;
     /*
      *      * Clear file creation mask.
@@ -18,12 +18,12 @@ void daemonfunc(const char *cmd)
     /*
      *      * Get maximum number of file descriptors.
      *           */
-  /*  if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
+   if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         perror(cmd);
         exit(1);
     }
 
-  
+/*
      *      * Become a session leader to lose controlling TTY.
      *           */
     if ((pid = fork()) < 0) {
@@ -63,16 +63,16 @@ void daemonfunc(const char *cmd)
     /*
      *      * Close all open file descriptors.
      *           */
-/*    if (rl.rlim_max == RLIM_INFINITY)
+   if (rl.rlim_max == RLIM_INFINITY)
         rl.rlim_max = 1024;
     for (i = 0; i < rl.rlim_max; i++)
         close(i);
 
-
+/*
      *      * Attach file descriptors 0, 1, and 2 to /dev/null.
      *           */
-    /*fd0 = open("/dev/null", O_RDWR);
-    fd1 = dup(0);
-    fd2 = dup(0);*/
+    fd0 = open("/dev/null", O_RDWR);
+    fd1 = open("/dev/null", O_RDWR);
+    fd2 = open("/dev/null", O_RDWR);
 
 }

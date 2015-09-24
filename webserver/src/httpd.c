@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
           break;
         case 'd':
           printf("Starting daemon...\n");
-          daemonfunc("me");
+          daemonfunc("daemon");
           while(1){
 
           }
