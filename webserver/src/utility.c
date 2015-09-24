@@ -8,7 +8,7 @@ void daemonfunc(const char *cmd)
 {
     int i, fd0, fd1, fd2;
     pid_t pid;
-    //struct rlimit       rl;
+    struct rlimit       rl;
     struct sigaction    sa;
     /*
      *      * Clear file creation mask.
