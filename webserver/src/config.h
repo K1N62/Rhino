@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <regex.h>
-#include "globalConfigVariables.h"
+#include <stdlib.h>
 
 #define CONFIG_FILENAME   "httpd.conf"
 #define CONFIG_PATH       "config/" CONFIG_FILENAME

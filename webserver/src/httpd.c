@@ -60,7 +60,9 @@ int main(int argc, char* argv[]) {
     }
   }
 
-// Parse config file
+  // Parse config file
+  parseConfig();
+  
 // Start daemon if set
 // Create listening socket
 // Start while-loop
