@@ -19,6 +19,10 @@ int main(int argc, char* argv[]) {
           break;
         case 'p':
           i++;
+          if(i >= argc){
+            printf("ERROR: WRONG USAGE\n");
+            return 0;
+          }
           if(argv[i][0] != '-'){
             if((port = atoi(argv[i])) != 0)
               printf("Port number: %d\n", port);
@@ -33,15 +37,36 @@ int main(int argc, char* argv[]) {
           }
           break;
         case 'd':
+          printf("Starting daemon...\n");
+          break;
+        case 'l':
+          printf("Starting logging..\n");
           break;
         case 's':
+          i++;
+          if(i >= argc){
+            printf("ERROR: WRONG USAGE\n");
+            return 0;
+          }
+          if(argv[i][0] != '-')
+            printf("Starting: %s as selected request handling method\n", argv[i]);
+          else{
+            printf("ERROR: WRONG USAGE\n");
+            return 0;
+          }
           break;
       }
     }
   }
 
-
-  testPrint();
+// Parse config file
+// Start daemon if set
+// Create listening socket
+// Start while-loop
+// Accept requests
+// Check if request follows standard        code 400, 403
+// Use selected request handling method
+//
 
   return 0;
 }
