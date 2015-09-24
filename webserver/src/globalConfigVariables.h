@@ -9,6 +9,6 @@
 
 #pragma once
 
-char *LISTEN_IP       = "127.0.0.1";
+char *SERVERNAME      = "127.0.0.1";
 int   LISTEN_PORT     = 80;
-char *ROOT_DIR        = "../../www";
+char *BASE_DIR        = "../../www";
