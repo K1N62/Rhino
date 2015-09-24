@@ -20,10 +20,24 @@ FILE* loadConfig(char *path)
 int parseConfig()
 {
   FILE *config = loadConfig(CONFIG_PATH);
+  char *line = NULL;
+  size_t len = 64;
+  int lineIndex = 0;
 
+  while( getline(&line, &len, config) != EOF )
+  {
+    lineIndex = 0;
+    // Ignore spaces
+    while (line[lineIndex] == ' ') {
+      lineIndex++;
+    }
+    // Ignore commented lines
+    if( line[lineIndex] != '#' && line[lineIndex] != '\n' )
+    {
+      printf("%s", line);
+    }
+  }
 
-  while( ( line = getline(config) ) != EOF )
-      printf("%c",ch);
-
+  fclose(config);
   return 0;
 }
