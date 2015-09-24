@@ -24,8 +24,10 @@ int main(int argc, char* argv[]) {
             return 0;
           }
           if(argv[i][0] != '-'){
-            if((port = atoi(argv[i])) != 0)
+            if((port = atoi(argv[i])) != 0){
+              LISTEN_PORT = port;
               printf("Port number: %d\n", port);
+            }
             else{
               printf("ERROR: WRONG USAGE\n");
               return 0;
