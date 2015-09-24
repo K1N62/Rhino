@@ -8,6 +8,8 @@
  */
 #pragma once
 
+#pragma once
+
 char *LISTEN_IP       = "127.0.0.1";
 int   LISTEN_PORT     = 80;
 char *ROOT_DIR        = "../../www";

@@ -19,5 +19,11 @@ FILE* loadConfig(char *path)
 
 int parseConfig()
 {
+  FILE *config = loadConfig(CONFIG_PATH);
+
+
+  while( ( line = getline(config) ) != EOF )
+      printf("%c",ch);
+
   return 0;
 }

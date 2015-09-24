@@ -1,8 +1,5 @@
 
-
 #include "utility.h"
-
-
 
 void daemonfunc(const char *cmd)
 {

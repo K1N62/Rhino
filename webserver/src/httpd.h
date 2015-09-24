@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "utility.h"
+#include "globalConfigVariables.h"
 #include "config.h"
+#include "utility.h"
 #include <stdio.h>
 #include <stdlib.h>
