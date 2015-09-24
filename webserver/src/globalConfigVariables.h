@@ -7,6 +7,6 @@
  *
  */
 
-#define LISTEN_IP     127.0.0.1
-#define LISTEN_PORT   80
-#define ROOT_DIR      "../../www"
+char *LISTEN_IP       = "127.0.0.1";
+int   LISTEN_PORT     = 80;
+char *ROOT_DIR        = "../../www";
