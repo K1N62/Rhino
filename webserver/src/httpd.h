@@ -7,9 +7,6 @@
 #pragma once
 
 #include "utility.h"
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-void testPrint() {
-  printf("%s\n", "Hello World");
-}
