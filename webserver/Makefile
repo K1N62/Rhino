@@ -3,10 +3,10 @@ LD = gcc
 INC_DIR = includes
 SRC_DIR = src
 OBJ_DIR = objects
-CFLAGS = -g -Wall -I$(INC_DIR)
+CFLAGS = -x c -g -Wall -I$(INC_DIR)
 LDFLAGS =
-SRCS = $(SRC_DIR)/httpd.c $(SRC_DIR)/utility.c
-OBJS = $(OBJ_DIR)/httpd.o $(OBJ_DIR)/utility.o
+SRCS = $(SRC_DIR)/httpd.c $(SRC_DIR)/utility.c $(SRC_DIR)/config.c
+OBJS = $(OBJ_DIR)/httpd.o $(OBJ_DIR)/utility.o $(OBJ_DIR)/config.o
 PROG = bin/httpd
 RM = /bin/rm
 
