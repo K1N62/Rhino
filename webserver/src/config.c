@@ -19,5 +19,6 @@ FILE* loadConfig(char *path)
 
 int parseConfig()
 {
+
   return 0;
 }

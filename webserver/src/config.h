@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <regex.h>
 #include "globalConfigVariables.h"
 
 #define CONFIG_FILENAME   "httpd.conf"
