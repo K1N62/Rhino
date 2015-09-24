@@ -7,7 +7,7 @@ FILE* loadConfig(char *path)
   FILE *fd;
 
   if ((fd = fopen(path, "r")) == NULL) {
-    // ERROR HANDLING LOG PERHAPS
+    // Unable to open config gile
     perror("Failed to open config file");
     exit(1);
   }
@@ -23,6 +23,10 @@ int parseConfig()
   char *line = NULL;
   size_t len = 64;
   int lineIndex = 0;
+  regex_t *r;
+  char *regex_servername    = "/^Servername: \"?([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})|([a-z]*\.[a-z]{1,6})\"?$/";
+  char *regex_listen_port   = "/^Listen: \"?([0-9]{1,5})\"?$/";
+  char *regex_root_dir      = "/^Basedir: \"?([a-z.\/]*)\"?$/";
 
   while( getline(&line, &len, config) != EOF )
   {
@@ -34,10 +38,13 @@ int parseConfig()
     // Ignore commented lines
     if( line[lineIndex] != '#' && line[lineIndex] != '\n' )
     {
+      // Parse the line
+
       printf("%s", line);
     }
   }
 
+  regfree(r);
   fclose(config);
   return 0;
 }
