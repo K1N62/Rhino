@@ -5,6 +5,13 @@
  * Copyright 2015
  */
 
+/* Global Config Variables */
+char *SERVERNAME      = "127.0.0.1";
+int   LISTEN_PORT     = 80;
+char *BASE_DIR        = "../../www";
+char *SERVER_LOG_PATH = "../log/server.log";
+char *ACCESS_LOG_PATH = "../log/access.log";
+
 #include "httpd.h"
 
 int main(int argc, char* argv[]) {
@@ -64,7 +71,7 @@ int main(int argc, char* argv[]) {
 
   // Parse config file
   parseConfig();
-  
+
 // Start daemon if set
 // Create listening socket
 // Start while-loop
