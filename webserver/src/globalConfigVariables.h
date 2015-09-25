@@ -6,7 +6,6 @@
  *  or parameter settings
  *
  */
-#pragma once
 
 #pragma once
 
