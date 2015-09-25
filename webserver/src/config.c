@@ -22,12 +22,10 @@ int parseConfig()
   FILE *config = loadConfig(CONFIG_PATH);
   char *line = NULL;
   size_t len = 64;
-  int lineIndex = 0;
-  regex_t *r;
-  char *regex_servername    = "/^Servername: \"?([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})|([a-z]*\.[a-z]{1,6})\"?$/";
-  char *regex_listen_port   = "/^Listen: \"?([0-9]{1,5})\"?$/";
-  char *regex_root_dir      = "/^Basedir: \"?([a-z.\/]*)\"?$/";
 
+  printf("Parsing config file\n", );
+
+  int lineIndex = 0;
   while( getline(&line, &len, config) != EOF )
   {
     lineIndex = 0;
@@ -35,16 +33,33 @@ int parseConfig()
     while (line[lineIndex] == ' ') {
       lineIndex++;
     }
-    // Ignore commented lines
+    // Ignore commented and empty lines
     if( line[lineIndex] != '#' && line[lineIndex] != '\n' )
     {
       // Parse the line
-
-      printf("%s", line);
+      if (startsWith("Servername", line + lineIndex))
+      {
+          printf("Name: %s", line + lineIndex + strlen("Servername: ") );
+      }
+      else if (startsWith("Listen", line + lineIndex))
+      {
+        printf("Port: %s", line + lineIndex + strlen("Listen: ") );
+      }
+      else if (startsWith("Basedir", line + lineIndex))
+      {
+        printf("Dir: %s", line + lineIndex + strlen("Basedir: ") );
+      }
+      else if (startsWith("Logpath", line + lineIndex))
+      {
+        printf("Log: %s", line + lineIndex + strlen("Logpath: ") );
+      }
+      else
+      {
+        printf("Invalid configuration");
+      }
     }
   }
 
-  regfree(r);
   fclose(config);
   return 0;
 }
