@@ -1,9 +1,7 @@
 
 #pragma once
 
-#include <stdio.h>
-#include <regex.h>
-#include <stdlib.h>
+#include "httpd.h"
 
 #define CONFIG_FILENAME   "httpd.conf"
 #define CONFIG_PATH       "config/" CONFIG_FILENAME
