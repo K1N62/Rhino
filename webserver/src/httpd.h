@@ -8,7 +8,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include <regex.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/types.h>
+#include <stdbool.h>
 
-#include "globalConfigVariables.h"
+//#include "globalConfigVariables.h"
 #include "config.h"
 #include "utility.h"
