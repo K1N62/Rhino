@@ -3,7 +3,7 @@
 
 void daemonfunc(const char *cmd)
 {
-    int i, fd0, fd1, fd2;
+    int i , fd0, fd1, fd2;
     pid_t pid;
     struct rlimit       rl;
     struct sigaction    sa;
@@ -20,7 +20,7 @@ void daemonfunc(const char *cmd)
         exit(1);
     }
 
-/*
+    /*
      *      * Become a session leader to lose controlling TTY.
      *           */
     if ((pid = fork()) < 0) {
@@ -65,11 +65,18 @@ void daemonfunc(const char *cmd)
     for (i = 0; i < rl.rlim_max; i++)
         close(i);
 
-/*
+    /*
      *      * Attach file descriptors 0, 1, and 2 to /dev/null.
      *           */
     fd0 = open("/dev/null", O_RDWR);
     fd1 = open("/dev/null", O_RDWR);
     fd2 = open("/dev/null", O_RDWR);
 
+}
+
+bool startsWith(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
