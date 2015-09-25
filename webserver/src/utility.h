@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <fcntl.h>
-#include <signal.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <stdlib.h>
-#include <stdio.h>
-
+#include "httpd.h"
 
 void daemonfunc(const char *cmd);
+
+/*  Starts With
+ *
+ *  Checks if a char array starts with another char array
+ * @pre       string, the string to start with
+ * @str       string, the string that should start with pre
+ */
+bool startsWith(const char *pre, const char *str);
