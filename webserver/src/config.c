@@ -23,7 +23,7 @@ int parseConfig()
   char *line = NULL;
   size_t len = 64;
 
-  printf("Parsing config file\n", );
+  printf("Parsing config file\n" );
 
   int lineIndex = 0;
   while( getline(&line, &len, config) != EOF )
