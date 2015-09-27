@@ -9,8 +9,11 @@
 
 #pragma once
 
-char *SERVERNAME;
-int   LISTEN_PORT;
-char *BASE_DIR;
-char *SERVER_LOG_PATH;
-char *ACCESS_LOG_PATH;
+struct configuration {
+  char *servername;
+  char *basedir;
+  char *logPath;
+  int   listenPort;
+};
+
+void setDefaultConfig(struct configuration *config);

@@ -18,7 +18,10 @@
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <stdbool.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
-//#include "globalConfigVariables.h"
+#include "globalConfigVariables.h"
 #include "config.h"
 #include "utility.h"

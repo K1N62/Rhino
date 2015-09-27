@@ -80,3 +80,33 @@ bool startsWith(const char *pre, const char *str)
            lenstr = strlen(str);
     return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
+
+bool isValidIpAddress(char *ipAddress)
+{
+    struct sockaddr_in sa;
+    int result = inet_pton(AF_INET, ipAddress, &(sa.sin_addr));
+    return result != 0;
+}
+
+bool hostnameToIp(char *hostname)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+    int i;
+
+    // If lookup failed
+    if ( (he = gethostbyname( hostname ) ) == NULL)
+        return false;
+
+
+    addr_list = (struct in_addr **) he->h_addr_list;
+
+    for(i = 0; addr_list[i] != NULL; i++)
+    {
+        //Return the first one
+        strcpy(hostname , inet_ntoa(*addr_list[i]) );
+        return true;
+    }
+
+    return false;
+}

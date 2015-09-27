@@ -2,6 +2,13 @@
 
 #include "config.h"
 
+/* Load config (Private)
+ *
+ * Loads a config file and returns it's filedescriptor
+ *
+ * @name      string, name of the file default to httpd.conf
+ * @return    FILE*, filepointer to the config file
+ */
 FILE* loadConfig(char *path)
 {
   FILE *fd;
@@ -17,33 +24,94 @@ FILE* loadConfig(char *path)
   }
 }
 
-int parseConfig()
+
+void readValue(size_t lineIndex, char *line, char *value, size_t size)
 {
-  FILE *config = loadConfig(CONFIG_PATH);
+  // Set variables
+  size_t counter = 0;
+
+  // Ignore spaces
+  while (line[lineIndex] == ' ')
+    lineIndex++;
+
+  // Ignore quote marks
+  if (line[lineIndex] == '"')
+    lineIndex++;
+
+  // Get the entered value, stop at end quote, newline or end of buffer
+  while (line[lineIndex] != '"' && line[lineIndex] != '\n' && counter < (size - 1))
+  {
+    value[counter] = line[lineIndex];
+    counter++;
+    lineIndex++;
+  }
+  value[counter] = '\0';
+}
+
+int parseConfig(struct configuration *config)
+{
+  FILE *configFile = loadConfig(CONFIG_PATH);
   char *line = NULL;
-  size_t len = 64;
+  char value[64] = {'\0'};
+  size_t  lineIndex = 0, len = 64;
 
   printf("Parsing config file\n" );
 
-  int lineIndex = 0;
-  while( getline(&line, &len, config) != EOF )
+  while( getline(&line, &len, configFile) != EOF )
   {
     lineIndex = 0;
     // Ignore spaces
-    while (line[lineIndex] == ' ') {
+    while (line[lineIndex] == ' ')
       lineIndex++;
-    }
+
     // Ignore commented and empty lines
     if( line[lineIndex] != '#' && line[lineIndex] != '\n' )
     {
       // Parse the line
       if (startsWith("Servername", line + lineIndex))
       {
-          printf("Name: %s", line + lineIndex + strlen("Servername: ") );
+        // Move pass variable name
+        lineIndex += strlen("Servername:");
+
+        readValue(lineIndex, line, value, sizeof(value));
+
+        // Check if value is an valid ip address
+        if (isValidIpAddress(value))
+        {
+          config->servername = value;
+          printf("name: %s\n", value );
+        }
+        // Otherwise check if it's an valid domain name and resolve it
+        else if(hostnameToIp(value))
+        {
+          config->servername = value;
+          printf("name: %s\n", value );
+        }
+        // Else this is not a valid config
+        else
+          printf("Invalid config, hostname\n");
+
       }
       else if (startsWith("Listen", line + lineIndex))
       {
-        printf("Port: %s", line + lineIndex + strlen("Listen: ") );
+        int  port = 0;
+
+        // Move pass variable name
+        lineIndex += strlen("Listen:");
+
+        readValue(lineIndex, line, value, sizeof(value));
+
+        // Check if valid port number
+        if((port = atoi(value)) != 0 && port < 65536)
+        {
+          config->listenPort = port;
+          printf("Port: %d\n", port);
+        }
+        // Else invalid
+        else
+        {
+          printf("Invalid config, port\n");
+        }
       }
       else if (startsWith("Basedir", line + lineIndex))
       {
@@ -60,6 +128,6 @@ int parseConfig()
     }
   }
 
-  fclose(config);
+  fclose(configFile);
   return 0;
 }
