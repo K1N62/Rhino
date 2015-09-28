@@ -21,6 +21,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <time.h>
 
 #include "globalConfigVariables.h"
 #include "config.h"

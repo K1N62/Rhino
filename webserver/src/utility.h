@@ -37,3 +37,7 @@ bool isValidIpAddress(char *ipAddress);
  * @return         bool, false if unsuccessfull
  */
 bool hostnameToIp(char *hostname);
+
+char* getIPStr(const struct sockaddr *sa, char *s, size_t maxlen);
+
+char* getMon(int mon);
