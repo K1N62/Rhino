@@ -13,5 +13,5 @@
 #define LOG_INFO      3
 #define LOG_DEBUG     4
 
-void accesslog(const struct sockaddr *addr, char* request, int code, int byte);
-void serverlog(int error, char* errorMessage);
+void accesslog(struct configuration *config, const struct sockaddr *addr, char* request, int code, int byte);
+void serverlog(struct configuration *config, int error, char* errorMessage);

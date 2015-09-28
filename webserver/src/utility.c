@@ -85,7 +85,9 @@ bool isValidIpAddress(char *ipAddress)
 {
     struct sockaddr_in sa;
     int result = inet_pton(AF_INET, ipAddress, &(sa.sin_addr));
-    return result != 0;
+    if(result == 0)
+      result = inet_pton(AF_INET6, ipAddress, &(sa.sin_addr));
+    return result;
 }
 
 bool hostnameToIp(char *hostname)
@@ -109,6 +111,69 @@ bool hostnameToIp(char *hostname)
     }
 
     return false;
+}
+
+char* getIPStr(const struct sockaddr *sa, char *s, size_t maxlen)
+{
+    switch(sa->sa_family) {
+        case AF_INET:
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+                    s, maxlen);
+            break;
+
+        case AF_INET6:
+            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+                    s, maxlen);
+            break;
+
+        default:
+            strncpy(s, "Unknown AF", maxlen);
+            return NULL;
+    }
+
+    return s;
+}
+
+char* getMon(int mon)
+{
+  switch(mon){
+    case 0:
+      return "Jan";
+      break;
+    case 1:
+      return "Feb";
+      break;
+    case 2:
+      return "Mar";
+      break;
+    case 3:
+      return "Apr";
+      break;
+    case 4:
+      return "May";
+      break;
+    case 5:
+      return "Jun";
+      break;
+    case 6:
+      return "Jul";
+      break;
+    case 7:
+      return "Aug";
+      break;
+    case 8:
+      return "Sep";
+      break;
+    case 9:
+      return "Oct";
+      break;
+    case 10:
+      return "Nov";
+      break;
+    case 11:
+      return "Dec";
+      break;
+    }
 }
 
 char* ccat(char *a, char *b, size_t size)

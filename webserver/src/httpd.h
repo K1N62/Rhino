@@ -23,6 +23,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <time.h>
 
 #include "globalConfigVariables.h"
 #include "config.h"

@@ -29,7 +29,9 @@ int main(int argc, char* argv[]) {
           printf("Help not implemented.. yet\n");
           break;
         case 'p':
-          i++;
+          i++; &sin, sizeof(sin)) == -1) {
+		printf("ERROR: Unable to bind socket\n");
+		exit(-1);
           if(i >= argc)
           {
             printf("ERROR: WRONG USAGE\n");
