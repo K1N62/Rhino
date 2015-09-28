@@ -11,7 +11,6 @@ int main(int argc, char* argv[]) {
 
   int i, port, sd, sd_current, addrlen;
   struct sockaddr_in sin, pin;
-	char reqBuf[512];
 
   // Set default config
   struct configuration config;
@@ -120,24 +119,15 @@ int main(int argc, char* argv[]) {
   		printf("ERROR: Unable to accept request, OS to greedy\n");
   		exit(-1);
   	}
-    // Recieve the data, thank you
-    if (recv(sd_current, reqBuf, sizeof(reqBuf), 0) == -1) {
-  		printf("ERROR: Unable to recieve request, I'm too humble\n");
-  		exit(-1);
-  	}
 
-  	printf("Request from %s:%i\n", inet_ntoa(pin.sin_addr), ntohs(pin.sin_port));
-  	printf("Message: %s\n", reqBuf);
-    
+    // Make this a new thread
+    // Pass the socket to the handler
+    requestHandle(sd_current, pin);
+
   }
 
   close(sd_current);
 	close(sd);
-
-// Accept requests
-// Check if request follows standard        code 400, 403
-// Use selected request handling method
-//
 
   return 0;
 }

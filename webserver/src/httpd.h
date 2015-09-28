@@ -22,7 +22,9 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <pthread.h>
 
 #include "globalConfigVariables.h"
 #include "config.h"
 #include "utility.h"
+#include "request.h"
