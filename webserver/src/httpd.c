@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
 
   int i, port, sd, sd_current, addrlen;
   struct sockaddr_in sin, pin;
+  pthread_t handler;
 
   // Set default config
   struct configuration config;
@@ -115,14 +116,25 @@ int main(int argc, char* argv[]) {
   while(true)
   {
     // Accept a request from queue, blocking
-    if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
+    if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1)
+    {
   		printf("ERROR: Unable to accept request, OS to greedy\n");
   		exit(-1);
   	}
 
     // Make this a new thread
     // Pass the socket to the handler
-    requestHandle(sd_current, pin);
+
+    // Create arguments struct
+    struct rqhdArgs args;
+    args.sd   = sd_current;
+    args.pin  = pin;
+
+    if(pthread_create(&handler, NULL, requestHandle, &args) != 0)
+    {
+      printf("ERROR: Unable to start thread\n");
+  		exit(-1);
+    }
 
   }
 

@@ -10,4 +10,9 @@
 
 #define REQ_BUFSIZE 512
 
-void requestHandle(int sd, struct sockaddr_in pin);
+struct rqhdArgs {
+  int sd;
+  struct sockaddr_in pin;
+};
+
+void *requestHandle(void *context);

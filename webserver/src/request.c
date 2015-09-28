@@ -1,9 +1,12 @@
 
 #include "request.h"
 
-void requestHandle(int sd, struct sockaddr_in pin)
+void *requestHandle(void *context)
 {
-
+	// Get the arguments
+	struct rqhdArgs *args = context;
+	int sd = args->sd;
+	struct sockaddr_in pin = args->pin;
 	char reqBuf[REQ_BUFSIZE];
 
   printf("Request from %s:%i\n", inet_ntoa(pin.sin_addr), ntohs(pin.sin_port));
@@ -19,7 +22,6 @@ void requestHandle(int sd, struct sockaddr_in pin)
   printf("Message: %s\n", reqBuf);
 
   // Send a response
-  fgets(reqBuf, sizeof(reqBuf) - 1, stdin);
 	if(send(sd, reqBuf, strlen(reqBuf) + 1, 0) == -1) {
 		printf("ERROR: Unable to send response\n");
 		exit(-1);

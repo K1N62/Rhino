@@ -6,7 +6,7 @@ OBJ_DIR = objects
 CFLAGS = -x c -g -Wall -I$(INC_DIR)
 LDFLAGS =
 SRCS = $(SRC_DIR)/config.c $(SRC_DIR)/httpd.c $(SRC_DIR)/utility.c $(SRC_DIR)/globalConfigVariables.c $(SRC_DIR)/request.h
-OBJS = $(OBJ_DIR)/config.o $(OBJ_DIR)/httpd.o $(OBJ_DIR)/utility.o $(OBJ_DIR)/globalConfigVariables.o $(OBJ_DIR)/request.o
+OBJS = $(OBJ_DIR)/config.o $(OBJ_DIR)/httpd.o $(OBJ_DIR)/utility.o $(OBJ_DIR)/globalConfigVariables.o $(OBJ_DIR)/request.o -lpthread
 # To include all files in dir
 #SRCS = $(wildcard $(SRC_DIR)/*.c)
 #OBJS = $(addprefix $(OBJ_DIR)/,$(notdir $(SRCS:.c=.o)))
