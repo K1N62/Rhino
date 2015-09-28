@@ -10,16 +10,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <regex.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/errno.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
-#include <sys/socket.h>
+#include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
 

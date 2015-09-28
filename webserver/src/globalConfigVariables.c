@@ -8,4 +8,5 @@ void setDefaultConfig(struct configuration *config)
   config->accLogPat     = "../log/accessLog.txt";
   config->serLogPath    = "../log/serverLog.txt";
   config->listenPort    = 80;
+  config->backlog        = 1000;
 }

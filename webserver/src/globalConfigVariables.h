@@ -15,6 +15,7 @@ struct configuration {
   char *accLogPath;
   char *serLogPath;
   int   listenPort;
+  int   backlog;
 };
 
 void setDefaultConfig(struct configuration *config);
