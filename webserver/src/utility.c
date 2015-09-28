@@ -3,7 +3,7 @@
 
 void daemonfunc(const char *cmd)
 {
-    int i , fd0, fd1, fd2;
+    int i, fd0, fd1, fd2;
     pid_t pid;
     struct rlimit       rl;
     struct sigaction    sa;
@@ -109,4 +109,12 @@ bool hostnameToIp(char *hostname)
     }
 
     return false;
+}
+
+char* ccat(char *a, char *b, size_t size)
+{
+  char *tmp = malloc(size);
+  strncpy(tmp, a, size);
+  strcat(tmp, b);
+  return tmp;
 }

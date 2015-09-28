@@ -37,3 +37,13 @@ bool isValidIpAddress(char *ipAddress);
  * @return         bool, false if unsuccessfull
  */
 bool hostnameToIp(char *hostname);
+
+/*  Concatenate (AKA SeaCat)
+ *
+ *  Concatenates two char arrays
+ * @a       char array, array a
+ * @b       char array, array b
+ * @size    size_t, size of both string with terminating null
+ * return   char pointer, new array
+ */
+char* ccat(char *a, char *b, size_t size);

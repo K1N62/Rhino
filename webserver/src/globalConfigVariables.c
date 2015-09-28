@@ -7,4 +7,5 @@ void setDefaultConfig(struct configuration *config)
   config->basedir        = "../../www";
   config->logPath        = "../log";
   config->listenPort     = 80;
+  config->backlog        = 1000;
 }

@@ -14,6 +14,7 @@ struct configuration {
   char *basedir;
   char *logPath;
   int   listenPort;
+  int   backlog;
 };
 
 void setDefaultConfig(struct configuration *config);
