@@ -9,7 +9,7 @@
 #include "httpd.h"
 
 #define REQ_BUFSIZE 512
-#define DIE_CON close(sd); return NULL;
+#define DIE_CON close(sd); free(args); pthread_exit(NULL);
 
 struct rqhdArgs {
   int sd;

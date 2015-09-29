@@ -6,6 +6,8 @@
 
 #pragma once
 
+#define DIE_CLEANUP pthread_attr_destroy(&att); close(sd_current); close(sd); exit(-1);
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

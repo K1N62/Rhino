@@ -3,7 +3,15 @@
  *
  * Authors, Jim Ahlstrand & Lukas Landenstad
  * Copyright 2015
- */
+
+ TODO:
+  * Fungerande HTTP header
+  * Realpath så i kan förfråga valfri fil
+  * Set base dir, anti haxxor
+  * Root permission så vi kan binda portar under 1024
+  * Logga till fil
+  * qwrite atomic write, istället för mutex på skrivningar till loggfilen
+*/
 
 #include "httpd.h"
 
@@ -12,6 +20,7 @@ int main(int argc, char* argv[]) {
   int i, port, sd, sd_current, addrlen;
   struct sockaddr_in sin, pin;
   pthread_t handler;
+  pthread_attr_t att;
 
   // Set default config
   struct configuration config;
@@ -111,6 +120,15 @@ int main(int argc, char* argv[]) {
 		exit(-1);
 	}
 
+  // Init thread attr
+  pthread_attr_init(&att);
+  // Set threads to detached state
+  pthread_attr_setdetachstate(&att, PTHREAD_CREATE_DETACHED);
+  // Set system scheduling
+  pthread_attr_setscope(&att, PTHREAD_SCOPE_SYSTEM);
+  // Set RoundRobin scheduling
+  pthread_attr_setschedpolicy(&att, SCHED_RR); // Not supported in LINUX pthreads
+
   // Start accepting requests
   addrlen = sizeof(pin);
   while(true)
@@ -118,28 +136,35 @@ int main(int argc, char* argv[]) {
     // Accept a request from queue, blocking
     if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1)
     {
-  		printf("ERROR: Unable to accept request, OS to greedy\n");
-  		exit(-1);
+  		printf("ERROR: Unable to accept request, OS won't share\n");
+  		DIE_CLEANUP
   	}
 
     // Make this a new thread
     // Pass the socket to the handler
 
     // Create arguments struct
-    struct rqhdArgs args;
-    args.sd   = sd_current;
-    args.pin  = pin;
-
-    if(pthread_create(&handler, NULL, requestHandle, &args) != 0)
+    /* Memory allocation problem? */
+    struct rqhdArgs *args = malloc(sizeof(struct rqhdArgs));
+    if (args == NULL)
     {
-      printf("ERROR: Unable to start thread\n");
-  		exit(-1);
+      printf("CRITICAL: Unable to allocate memory\n");
+  		DIE_CLEANUP
+    }
+    args->sd   = sd_current;
+    args->pin  = pin;
+
+    if(pthread_create(&handler, &att, requestHandle, args) != 0)
+    {
+      printf("CRITICAL: Unable to start thread\n");
+  		DIE_CLEANUP
     }
 
   }
 
+  pthread_attr_destroy(&att);
   close(sd_current);
-	close(sd);
+  close(sd);
 
   return 0;
 }
