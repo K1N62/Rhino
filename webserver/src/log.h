@@ -1,6 +1,7 @@
-/* Header file
+
+/* Log Header
  *
- * Includes headers important for logging functions
+ *  Declares functions and macros for the log functions
  */
 
 #pragma once
@@ -13,5 +14,13 @@
 #define LOG_INFO      3
 #define LOG_DEBUG     4
 
-void accesslog(struct configuration *config, const struct sockaddr *addr, char* request, int code, int byte);
-void serverlog(struct configuration *config, int error, char* errorMessage);
+FILE *_log_access_fd,
+     *_log_server_fd;
+
+void log_init(struct configuration *config);
+
+void log_destroy();
+
+void log_access(const struct sockaddr *addr, char *request, char *statusCode, int bytes);
+
+void log_server(int error, char *errorMessage);

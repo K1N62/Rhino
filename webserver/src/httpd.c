@@ -22,12 +22,19 @@ int main(int argc, char* argv[]) {
   pthread_t handler;
   pthread_attr_t att;
 
+  // Init thread lock
+  pthread_mutex_init(&thread_lock, NULL);
+
   // Set default config
   struct configuration config;
   setDefaultConfig(&config);
 
   // Parse config file
   parseConfig(&config);
+
+  // Init logfunctions
+  // !! Only default config is read
+  log_init(&config);
 
   if(argc > 1)
   {
@@ -163,8 +170,10 @@ int main(int argc, char* argv[]) {
   }
 
   pthread_attr_destroy(&att);
+  pthread_mutex_destroy(&thread_lock);
   close(sd_current);
   close(sd);
+  log_destroy();
 
   return 0;
 }

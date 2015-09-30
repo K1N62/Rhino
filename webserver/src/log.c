@@ -1,45 +1,81 @@
 
 #include "log.h"
 
-void accesslog(struct configuration *config, const struct sockaddr *addr, char* request, int code, int byte)
+void log_init(struct configuration *config)
 {
-  int fd;
-  time_t t = time(NULL);
-  struct tm tm = *localtime(&t);
-  char str[48];
+  // Open access log
+  if ((_log_access_fd = fopen(config->accLogPath, "a+")) == NULL) {
+    printf("CRITICAL: Unable to open log %s, %s\n", config->accLogPath, strerror(errno));
+    exit(-1);
+  }
 
-  fd = open(config.accLogPath, O_CREAT | O_RDWR);
-
-  fputs("%s - - [%d/%d/%d:%d:%d:%d +0100] \"%s HTTP/1.0\" %d %d\n", getIPStr(addr, str, sizeof(str)), tm.tm_mday, getMon(tm.tm_mon), tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec, request, code, byte);
-  close(fd);
+  // Open server log
+  if ((_log_access_fd = fopen(config->srvLogPath, "a+")) == NULL) {
+    printf("CRITICAL: Unable to open log %s, %s\n", config->srvLogPath, strerror(errno));
+    exit(-1);
+  }
 }
 
-void serverlog(struct configuration *config, int error, char* errorMessage)
+void log_destroy()
 {
-  int fd;
-  time_t t = time(NULL);
-  struct tm tm = *localtime(&t);
-  char* logLevel;
+  fclose(_log_access_fd);
+  fclose(_log_server_fd);
+}
 
-  fd = open(config.serLogPath, O_CREAT | O_RDWR);
+void log_access(const struct sockaddr *addr, char *request, char *statusCode, int bytes)
+{
+  time_t t = time(NULL);
+  char entry[265];
+  char date[64];
+  char str[48];
+
+  // Get the date
+  strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&t));
+
+  // Set the entry
+  sprintf(entry, "%s - - [%s] \"%s\" %s %d\n", getIPStr(addr, str, sizeof(str)), date, request, statusCode, bytes);
+
+  // Get mutex and print to log
+  pthread_mutex_lock(&thread_lock);
+  fputs(entry, _log_access_fd);
+  pthread_mutex_unlock(&thread_lock);
+
+}
+
+void log_server(int error, char *errorMessage)
+{
+  time_t t = time(NULL);
+  char entry[265];
+  char date[64];
+  char *logLevel;
+
+  // Get the date
+  strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&t));
 
   switch(error){
     case(0):
-      logLevel = "LOG_CRITICAL";
+      logLevel = "[CRITICAL]:";
       break;
     case(1):
-      logLevel = "LOG_ERROR";
+      logLevel = "[ERROR]:";
       break;
     case(2):
-      logLevel = "LOG_WARNING";
+      logLevel = "[WARNING]:";
       break;
     case(3):
-      logLevel = "LOG_INFORMATION";
+      logLevel = "[INFORMATION]:";
       break;
     case(4):
-      logLevel = "LOG_DEBUG";
+      logLevel = "[DEBUG]:";
       break;
+  }
 
-  fputs("%d/%d/%d:%d:%d:%d %s \"%s\"\n", tm.tm_mday, getMon(tm.tm_mon), tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec, logLevel, errorMessage);
-  close (fd);
+  // Set the entry
+  sprintf(entry, "[%s] \"%s %s\"\n", date, logLevel, errorMessage);
+
+  // Get mutex and print to log
+  pthread_mutex_lock(&thread_lock);
+  fputs(entry, _log_server_fd);
+  pthread_mutex_unlock(&thread_lock);
+
 }

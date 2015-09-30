@@ -40,7 +40,6 @@ bool hostnameToIp(char *hostname);
 
 char* getIPStr(const struct sockaddr *sa, char *s, size_t maxlen);
 
-char* getMon(int mon);
 /*  Concatenate (AKA SeaCat)
  *
  *  Concatenates two char arrays

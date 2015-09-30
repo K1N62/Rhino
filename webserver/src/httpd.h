@@ -6,7 +6,7 @@
 
 #pragma once
 
-#define DIE_CLEANUP pthread_attr_destroy(&att); close(sd_current); close(sd); exit(-1);
+#define DIE_CLEANUP pthread_attr_destroy(&att); pthread_mutex_destroy(&thread_lock); close(sd_current); close(sd); log_destroy(); exit(-1);
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -25,10 +26,13 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <pthread.h>
 #include <time.h>
+
+// Global lock
+pthread_mutex_t thread_lock;
 
 #include "globalConfigVariables.h"
 #include "config.h"
+#include "log.h"
 #include "utility.h"
 #include "request.h"

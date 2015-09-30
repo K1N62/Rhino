@@ -16,14 +16,13 @@ FILE* loadConfig(char *path)
   if ((fd = fopen(path, "r")) == NULL) {
     // Unable to open config gile
     perror("Failed to open config file");
-    exit(1);
+    exit(-1);
   }
   else
   {
     return fd;
   }
 }
-
 
 void readValue(size_t lineIndex, char *line, char *value, size_t size)
 {
@@ -79,13 +78,11 @@ int parseConfig(struct configuration *config)
         if (isValidIpAddress(value))
         {
           config->servername = value;
-          printf("name: %s\n", value );
         }
         // Otherwise check if it's an valid domain name and resolve it
         else if(hostnameToIp(value))
         {
           config->servername = value;
-          printf("name: %s\n", value );
         }
         // Else this is not a valid config
         else
@@ -105,7 +102,6 @@ int parseConfig(struct configuration *config)
         if((port = atoi(value)) != 0 && port < 65536)
         {
           config->listenPort = port;
-          printf("Port: %d\n", port);
         }
         // Else invalid
         else
@@ -115,11 +111,11 @@ int parseConfig(struct configuration *config)
       }
       else if (startsWith("Basedir", line + lineIndex))
       {
-        printf("Dir: %s", line + lineIndex + strlen("Basedir: ") );
+
       }
       else if (startsWith("Logpath", line + lineIndex))
       {
-        printf("Log: %s", line + lineIndex + strlen("Logpath: ") );
+
       }
       else
       {
