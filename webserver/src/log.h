@@ -21,6 +21,6 @@ void log_init(struct configuration *config);
 
 void log_destroy();
 
-void log_access(const struct sockaddr *addr, char *request, char *statusCode, int bytes);
+void log_access(const struct sockaddr_in *addr, char *request, char *statusCode, int bytes);
 
 void log_server(int error, char *errorMessage);

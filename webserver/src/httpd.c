@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
   while(true) {
     // Accept a request from queue, blocking
     if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
-  		printf("ERROR: Unable to accept request, OS won't share\n");
+  		printf("ERROR: Unable to accept request, OS won't share, %s\n", strerror(errno));
   		DIE_CLEANUP
   	}
 

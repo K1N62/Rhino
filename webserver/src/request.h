@@ -28,7 +28,7 @@ Status-Code    = "200"   ; OK
 #include "httpd.h"
 
 #define REQ_BUFSIZE 512
-#define DIE_CON close(sd); free(args); pthread_exit(NULL);
+#define DIE_CON fclose(reqFile); close(sd); free(args); pthread_exit(NULL);
 
 struct rqhdArgs {
   int sd;

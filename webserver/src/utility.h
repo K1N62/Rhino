@@ -38,7 +38,7 @@ bool isValidIpAddress(char *ipAddress);
  */
 bool hostnameToIp(char *hostname);
 
-char* getIPStr(const struct sockaddr *sa, char *s, size_t maxlen);
+//char* getIPStr(const struct sockaddr *sa, char *s, size_t maxlen);
 
 /*  Concatenate (AKA SeaCat)
  *

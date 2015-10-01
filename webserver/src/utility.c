@@ -112,7 +112,7 @@ bool hostnameToIp(char *hostname)
 
     return false;
 }
-
+/*
 char* getIPStr(const struct sockaddr *sa, char *s, size_t maxlen)
 {
     switch(sa->sa_family) {
@@ -133,7 +133,7 @@ char* getIPStr(const struct sockaddr *sa, char *s, size_t maxlen)
 
     return s;
 }
-
+*/
 
 char* ccat(char *a, char *b, size_t size)
 {

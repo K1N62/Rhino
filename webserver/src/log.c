@@ -10,7 +10,7 @@ void log_init(struct configuration *config)
   }
 
   // Open server log
-  if ((_log_access_fd = fopen(config->srvLogPath, "a+")) == NULL) {
+  if ((_log_server_fd = fopen(config->srvLogPath, "a+")) == NULL) {
     printf("CRITICAL: Unable to open log %s, %s\n", config->srvLogPath, strerror(errno));
     exit(-1);
   }
@@ -22,18 +22,20 @@ void log_destroy()
   fclose(_log_server_fd);
 }
 
-void log_access(const struct sockaddr *addr, char *request, char *statusCode, int bytes)
+void log_access(const struct sockaddr_in *addr, char *request, char *statusCode, int bytes)
 {
   time_t t = time(NULL);
-  char entry[265];
+  char entry[1024];
   char date[64];
-  char str[48];
+  char ip[INET_ADDRSTRLEN];
 
   // Get the date
   strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&t));
 
+  inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN);
+
   // Set the entry
-  sprintf(entry, "%s - - [%s] \"%s\" %s %d\n", getIPStr(addr, str, sizeof(str)), date, request, statusCode, bytes);
+  sprintf(entry, "%s - - [%s] \"%s\" %s %d\n", ip, date, request, statusCode, bytes);
 
   // Get mutex and print to log
   pthread_mutex_lock(&thread_lock);
