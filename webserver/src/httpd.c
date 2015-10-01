@@ -32,20 +32,18 @@ int main(int argc, char* argv[]) {
   // Parse config file
   parseConfig(&config);
 
-  // Init logfunctions
-  // !! Only default config is read
-  log_init(&config);
-
   if(argc > 1) {
     for(i = 1; i < argc; i++) {
       switch(argv[i][1]) {
         case 'h':
-          printf("Help not implemented.. yet\n");
+          printHelp();
+          return 0;
           break;
         case 'p':
           i++;
           if(i >= argc) {
             printf("ERROR: WRONG USAGE\n");
+            printHelp();
             return 0;
           }
           if(argv[i][0] != '-') {
@@ -55,11 +53,13 @@ int main(int argc, char* argv[]) {
             }
             else {
               printf("ERROR: WRONG USAGE\n");
+              printHelp();
               return 0;
             }
           }
           else {
             printf("ERROR: WRONG USAGE\n");
+            printHelp();
             return 0;
           }
           break;
@@ -69,12 +69,26 @@ int main(int argc, char* argv[]) {
           daemonfunc("daemon");
           break;
         case 'l':
-          printf("Starting logging..\n");
+          i++;
+          if(i >= argc) {
+            printf("ERROR: WRONG USAGE\n");
+            printHelp();
+            return 0;
+          }
+          if(argv[i][0] != '-') {
+            config.accLogPath = argv[i];
+          }
+          else {
+            printf("ERROR: WRONG USAGE\n");
+            printHelp();
+            return 0;
+          }
           break;
         case 's':
           i++;
           if(i >= argc) {
             printf("ERROR: WRONG USAGE\n");
+            printHelp();
             return 0;
           }
           if(argv[i][0] != '-')
@@ -82,12 +96,16 @@ int main(int argc, char* argv[]) {
           else
           {
             printf("ERROR: WRONG USAGE\n");
+            printHelp();
             return 0;
           }
           break;
       }
     }
   }
+
+  // Init logfunctions
+  log_init(&config);
 
   // Create listening socket
   // Domain -> AF_INET = IPV4

@@ -4,14 +4,30 @@
 void log_init(struct configuration *config)
 {
   // Open access log
-  if ((_log_access_fd = fopen(config->accLogPath, "a+")) == NULL) {
-    printf("CRITICAL: Unable to open log %s, %s\n", config->accLogPath, strerror(errno));
+  char buffert[128];
+  FILE *tmpFile;
+  if(realpath(config->accLogPath, buffert) == NULL){
+    if((tmpFile = fopen(buffert, "a+")) == NULL){
+      printf("CRITICAL: Unable to locate logfile at: %s, %s\n", buffert, strerror(errno));
+      exit(-1);
+    }
+    else
+      fclose(tmpFile);
+  }
+
+  if ((_log_access_fd = fopen(buffert, "a+")) == NULL) {
+    printf("CRITICAL: Unable to open log %s, %s\n", buffert, strerror(errno));
+    exit(-1);
+  }
+
+  if(realpath(config->srvLogPath, buffert) == NULL){
+    printf("CRITICAL: Unable to locate logfile at: %s, %s\n", buffert, strerror(errno));
     exit(-1);
   }
 
   // Open server log
-  if ((_log_server_fd = fopen(config->srvLogPath, "a+")) == NULL) {
-    printf("CRITICAL: Unable to open log %s, %s\n", config->srvLogPath, strerror(errno));
+  if ((_log_server_fd = fopen(buffert, "a+")) == NULL) {
+    printf("CRITICAL: Unable to open log %s, %s\n", buffert, strerror(errno));
     exit(-1);
   }
 }

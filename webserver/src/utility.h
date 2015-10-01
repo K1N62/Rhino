@@ -49,3 +49,10 @@ bool hostnameToIp(char *hostname);
  * return   char pointer, new array
  */
 char* ccat(char *a, char *b, size_t size);
+
+/*  Print help
+ *
+ *
+ *  Print help to user
+ */
+void printHelp(void);

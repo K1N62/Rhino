@@ -142,3 +142,8 @@ char* ccat(char *a, char *b, size_t size)
   strcat(tmp, b);
   return tmp;
 }
+
+void printHelp(void)
+{
+  printf("\n -h \t Print help text \n -p \t port, Select port to listen to \n -d \t Run webserver as a daemon \n -l \t logfile, Log to logfile \n    \t If not specified, logging will be output to syslog \n -s \t |thread|, Select request handling method \n\n");
+}
