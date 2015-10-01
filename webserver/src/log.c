@@ -4,13 +4,15 @@
 void log_init(struct configuration *config)
 {
   // Open access log
-  if ((_log_access_fd = fopen(config->accLogPath, "a+")) == NULL) {
+  char *accFile = "access.log";
+  char *srvFile = "server.log";
+  if ((_log_access_fd = fopen(ccat(config->logPath, accFile, (sizeof(config->logPath) + sizeof(accFile))), "a+")) == NULL) {
     printf("CRITICAL: Unable to open log %s, %s\n", config->accLogPath, strerror(errno));
     exit(-1);
   }
 
   // Open server log
-  if ((_log_server_fd = fopen(config->srvLogPath, "a+")) == NULL) {
+  if ((_log_server_fd = fopen(ccat(config->logPath, srvFile, (sizeof(config->logPath) + sizeof(srvFile))), "a+")) == NULL) {
     printf("CRITICAL: Unable to open log %s, %s\n", config->srvLogPath, strerror(errno));
     exit(-1);
   }
