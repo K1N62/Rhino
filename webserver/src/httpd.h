@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <time.h>
+#include <limits.h>
 
 // Global lock
 pthread_mutex_t thread_lock;

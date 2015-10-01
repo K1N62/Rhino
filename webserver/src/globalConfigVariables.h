@@ -12,7 +12,8 @@
 struct configuration {
   char *servername;
   char *basedir;
-  char *logPath;
+  char *accLogPath;
+  char *srvLogPath;
   int   listenPort;
   int   backlog;
 };
