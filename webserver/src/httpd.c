@@ -140,8 +140,7 @@ int main(int argc, char* argv[]) {
     // Pass the socket to the handler
 
     // Create arguments struct
-    /* Memory allocation problem? */
-    struct rqhdArgs *args = malloc(sizeof(struct rqhdArgs));
+    struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
     if (args == NULL) {
       printf("CRITICAL: Unable to allocate memory\n");
   		DIE_CLEANUP

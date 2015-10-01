@@ -30,9 +30,19 @@ Status-Code    = "200"   ; OK
 #define REQ_BUFSIZE 512
 #define DIE_CON fclose(reqFile); close(sd); free(args); pthread_exit(NULL);
 
-struct rqhdArgs {
+struct _rqhd_args {
   int sd;
   struct sockaddr_in pin;
+};
+
+struct _rqhd_header {
+  char *protocol;
+  char *status;
+  char *server;
+  char *type;
+  char *cache;
+  char *modified;
+  int   size;
 };
 
 /* Request Handle
