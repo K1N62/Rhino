@@ -69,13 +69,13 @@ void *requestHandle(void *context)
 		}
 
 		// Content-Type
-		strcpy(tmp, "Content-Type: text/html\r\n");
+		strcpy(tmp, "Content-Type: text/html; charset=UTF-8\r\n");
 		if(sendLine(sd, tmp) == -1) {
 			DIE_CON
 		}
 
-		// Content-Encoding
-		strcpy(tmp, "Content-Encoding: UTF-8\r\n");
+		// Cache-control
+		strcpy(tmp, "Cach-Control: public\r\n");
 		if(sendLine(sd, tmp) == -1) {
 			DIE_CON
 		}

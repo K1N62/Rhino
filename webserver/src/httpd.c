@@ -36,37 +36,29 @@ int main(int argc, char* argv[]) {
   // !! Only default config is read
   log_init(&config);
 
-  if(argc > 1)
-  {
-    for(i = 1; i < argc; i++)
-    {
-      switch(argv[i][1])
-      {
+  if(argc > 1) {
+    for(i = 1; i < argc; i++) {
+      switch(argv[i][1]) {
         case 'h':
           printf("Help not implemented.. yet\n");
           break;
         case 'p':
           i++;
-          if(i >= argc)
-          {
+          if(i >= argc) {
             printf("ERROR: WRONG USAGE\n");
             return 0;
           }
-          if(argv[i][0] != '-')
-          {
-            if((port = atoi(argv[i])) != 0 && port < 65536)
-            {
+          if(argv[i][0] != '-') {
+            if((port = atoi(argv[i])) != 0 && port < 65536) {
               config.listenPort = port;
               printf("Port number: %d\n", port);
             }
-            else
-            {
+            else {
               printf("ERROR: WRONG USAGE\n");
               return 0;
             }
           }
-          else
-          {
+          else {
             printf("ERROR: WRONG USAGE\n");
             return 0;
           }
@@ -81,8 +73,7 @@ int main(int argc, char* argv[]) {
           break;
         case 's':
           i++;
-          if(i >= argc)
-          {
+          if(i >= argc) {
             printf("ERROR: WRONG USAGE\n");
             return 0;
           }
@@ -138,11 +129,9 @@ int main(int argc, char* argv[]) {
 
   // Start accepting requests
   addrlen = sizeof(pin);
-  while(true)
-  {
+  while(true) {
     // Accept a request from queue, blocking
-    if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1)
-    {
+    if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
   		printf("ERROR: Unable to accept request, OS won't share\n");
   		DIE_CLEANUP
   	}
@@ -153,22 +142,22 @@ int main(int argc, char* argv[]) {
     // Create arguments struct
     /* Memory allocation problem? */
     struct rqhdArgs *args = malloc(sizeof(struct rqhdArgs));
-    if (args == NULL)
-    {
+    if (args == NULL) {
       printf("CRITICAL: Unable to allocate memory\n");
   		DIE_CLEANUP
     }
     args->sd   = sd_current;
     args->pin  = pin;
 
-    if(pthread_create(&handler, &att, requestHandle, args) != 0)
-    {
+    if(pthread_create(&handler, &att, requestHandle, args) != 0) {
       printf("CRITICAL: Unable to start thread\n");
   		DIE_CLEANUP
     }
 
   }
 
+
+  // Clean up
   pthread_attr_destroy(&att);
   pthread_mutex_destroy(&thread_lock);
   close(sd_current);
