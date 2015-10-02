@@ -136,11 +136,17 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 void *requestHandle(void *context)
 {
 	// Get the arguments
-	struct _rqhd_args *args = context;
-	int sd = args->sd;
+	char 	buffert[128],
+				reqBuf[REQ_BUFSIZE],
+				date[64],
+				*req_line,
+				*req_token;
+	struct _rqhd_header head;
+	struct _rqhd_args *args = (struct _rqhd_args*) context;
+	struct _rqhd_req req;
 	struct sockaddr_in pin = args->pin;
-	char reqBuf[REQ_BUFSIZE];
-
+	int 	sd = args->sd;
+	memset(date, '\0', sizeof(date));
 
   printf("Request from %s:%i\n", inet_ntoa(pin.sin_addr), ntohs(pin.sin_port));
 
@@ -150,65 +156,119 @@ void *requestHandle(void *context)
     close(sd); free(args); pthread_exit(NULL);
   }
 
-  // Check if request follows standard
+	// PARSE REQUEST -------------------------------------
+	// First line is the actual request
+	req_line = strtok(reqBuf, "\r\n");
+	req_token = strtok(req_line, " ");
 
-	if (startsWith("GET /index.html", reqBuf)) {
-		// Open the file
-		FILE *reqFile = fopen("../www/index.html", "r");
-		if (reqFile == NULL) {
-			printf("ERROR: Unable to open requested file\n");
-			DIE_CON
+	// Check if GET or HEAD is set
+	if (req_token != NULL) {
+		if (strcmp(req_token, "GET") || strcmp(req_token, "HEAD")) {
+			req.method = req_token;
+
+			// Get uri
+			req_token = strtok(NULL, " ");
+			if (req_token != NULL) {
+				req.uri = req_token;
+
+				// Get Protocol
+				req_token = strtok(NULL, " ");
+				if (req_token != NULL) {
+					if (strcmp(req_token, "HTTP/"_HTTP_VER)) {
+						req.protocol = req_token;
+
+					} else {
+						// If invalid protocol set 400 Bad Request
+						head.status 	= "400 Bad Request";
+						req.uri				= "errpg/400.html";
+					}
+				} else {
+					// If no protocol set 400 Bad Request
+					head.status 	= "400 Bad Request";
+					req.uri				= "errpg/400.html";
+				}
+			} else {
+				// If no uri set 400 Bad Request
+				head.status 	= "400 Bad Request";
+				req.uri				= "errpg/400.html";
+			}
+		} else {
+			// If invalid method set 501 Not Implemented
+			head.status 	= "501 Not Implemented";
+			req.uri				= "errpg/501.html";
 		}
+	} else {
+		// If no method set 400 Bad Request
+		req.method		= "GET";
+		head.status 	= "400 Bad Request";
+		req.uri				= "errpg/400.html";
+	}
 
-		// Get the file size
-		struct stat stat_buf;
-		fstat(fileno(reqFile), &stat_buf);
+	// JAIL HERE
+	// Use realpath on uri
+	// Remove first '/'
+	if (buffert[0] == '/') {
+		memmove(buffert, buffert+1, strlen(buffert));
+	}
+	// If '/' was only character in uri set index
+	if (strlen(buffert) == 0) {
+		req.uri = "www/index.html";
+	}
 
-	 	// HEADER -------------------------------------
-		char date[64];
-		memset(date, '\0', sizeof(date));
-		struct _rqhd_header head;
+	if (realpath(req.uri, buffert) == NULL) {
+		// If invalid path set 403 Forbidden
+		req.method		= "GET";
+		head.status 	= "403 Forbidden";
+		req.uri				= "errpg/403.html";
+	}
 
-		// Server name
-		head.server 	= "SkyNet@Ur.service";
-		// Protocol
-		head.protocol = "HTTP/1.0";
-		// Status code
-		head.status 	= "200 OK";
-		// Type
-		head.type 		= "text/html";
-		// Size
-		head.size			= (int)stat_buf.st_size;
-		// Cache
-		head.cache 		= "public";
-		// Last-Modified
-		strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&stat_buf.st_ctime));
-		head.modified	= date;
+	// Open the file
+	FILE *reqFile = fopen(buffert, "r");
+	if (reqFile == NULL) {
+		printf("ERROR: Unable to open requested file\n");
+		DIE_CON
+	}
 
-		// Send header
-		if (sendHeader(sd, &head) == -1) {
-			printf("ERROR: Unable to send header\n");
-			DIE_CON
-		}
-		// -------------------------------------------------------------------------
+	// Get the file size
+	struct stat stat_buf;
+	fstat(fileno(reqFile), &stat_buf);
 
-		// Send the requested file
-		if(sendfile(sd, fileno(reqFile), NULL , stat_buf.st_size) == -1)	{
+	// HEADER -------------------------------------
+	// Server name
+	head.server 	= _NAME" "_VERSION;
+	// Protocol
+	head.protocol = "HTTP/"_HTTP_VER;
+	// Type
+	head.type 		= "text/html";
+	// Size
+	head.size			= (int)stat_buf.st_size;
+	// Cache
+	head.cache 		= "public";
+	// Last-Modified
+	strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&stat_buf.st_ctime));
+	head.modified	= date;
+
+	// Send header
+	if (sendHeader(sd, &head) == -1) {
+		printf("ERROR: Unable to send header\n");
+		DIE_CON
+	}
+	// -------------------------------------------------------------------------
+
+	// Send the requested file if method is GET
+	if (strcmp(req.method, "GET")) {
+		if (sendfile(sd, fileno(reqFile), NULL , stat_buf.st_size) == -1)	{
 			printf("ERROR: Unable to send requested file, %s\n", strerror(errno));
 			DIE_CON
 		}
-
-		// Log
-		log_access(&pin, reqBuf, "200", stat_buf.st_size);
-
-		// Close requested file
-		fclose(reqFile);
-	}
-	else {
-		if (sendLine(sd, "Unable to handle this shit") == -1) {
-			close(sd); free(args); pthread_exit(NULL);
-		}
 	}
 
-  close(sd); free(args); pthread_exit(NULL);
+	// Log
+	log_access(&pin, reqBuf, "200", stat_buf.st_size);
+
+	// Cleanup
+	fclose(reqFile);
+  close(sd);
+	free(args);
+	pthread_exit(NULL);
 }

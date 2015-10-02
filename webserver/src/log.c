@@ -56,6 +56,7 @@ void log_access(const struct sockaddr_in *addr, char *request, char *statusCode,
   // Get mutex and print to log
   pthread_mutex_lock(&thread_lock);
   fputs(entry, _log_access_fd);
+  fflush(_log_access_fd);
   pthread_mutex_unlock(&thread_lock);
 
 }
@@ -94,6 +95,7 @@ void log_server(int error, char *errorMessage)
   // Get mutex and print to log
   pthread_mutex_lock(&thread_lock);
   fputs(entry, _log_server_fd);
+  fflush(_log_server_fd);
   pthread_mutex_unlock(&thread_lock);
 
 }

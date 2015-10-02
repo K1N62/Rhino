@@ -4,31 +4,19 @@
  * Handles requests
  */
 
-/*
-Status-Code    = "200"   ; OK
-                | "201"   ; Created
-                | "202"   ; Accepted
-                | "204"   ; No Content
-                | "301"   ; Moved Permanently
-                | "302"   ; Moved Temporarily
-                | "304"   ; Not Modified
-                | "400"   ; Bad Request
-                | "401"   ; Unauthorized
-                | "403"   ; Forbidden
-                | "404"   ; Not Found
-                | "500"   ; Internal Server Error
-                | "501"   ; Not Implemented
-                | "502"   ; Bad Gateway
-                | "503"   ; Service Unavailable
-                | extension-code
-*/
-
 #pragma once
 
 #include "httpd.h"
 
 #define REQ_BUFSIZE 512
 #define DIE_CON fclose(reqFile); close(sd); free(args); pthread_exit(NULL);
+
+#define _REQ_OK   "200" // OK
+#define _REQ_BAD  "400" // Bad Request
+#define _REQ_FBN  "403" // Forbidden
+#define _REQ_NFD  "404" // Not Found
+#define _REQ_ISE  "500" // Internal Server Error
+#define _REQ_NIM  "501" // Not Implemented
 
 struct _rqhd_args {
   int sd;
@@ -43,6 +31,20 @@ struct _rqhd_header {
   char *cache;
   char *modified;
   int   size;
+};
+
+struct _rqhd_req_head {
+  char *host;
+  char *userAgent;
+  char *accept;
+  char *referer;
+};
+
+struct _rqhd_req {
+  char *method;
+  char *uri;
+  char *protocol;
+  struct _rqhd_req_head *head;
 };
 
 /* Request Handle

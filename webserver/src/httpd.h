@@ -6,6 +6,10 @@
 
 #pragma once
 
+#define _NAME     "Rhino"
+#define _VERSION  "1.0"
+#define _HTTP_VER "1.0"
+
 #define DIE_CLEANUP pthread_attr_destroy(&att); pthread_mutex_destroy(&thread_lock); close(sd_current); close(sd); log_destroy(); exit(-1);
 
 #include <stdio.h>

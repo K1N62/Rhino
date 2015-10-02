@@ -5,12 +5,10 @@
  * Copyright 2015
 
  TODO:
-  * Fungerande HTTP header
   * Realpath så i kan förfråga valfri fil
   * Set base dir, anti haxxor
   * Root permission så vi kan binda portar under 1024
-  * Logga till fil
-  * qwrite atomic write, istället för mutex på skrivningar till loggfilen
+  * Signal handler
 */
 
 #include "httpd.h"
@@ -140,7 +138,7 @@ int main(int argc, char* argv[]) {
   pthread_attr_init(&att);
   // Set threads to detached state
   pthread_attr_setdetachstate(&att, PTHREAD_CREATE_DETACHED);
-  // Set system scheduling
+  // Set system scope
   pthread_attr_setscope(&att, PTHREAD_SCOPE_SYSTEM);
   // Set RoundRobin scheduling
   pthread_attr_setschedpolicy(&att, SCHED_RR); // Not supported in LINUX pthreads
