@@ -14,9 +14,6 @@
 #define LOG_INFO      3
 #define LOG_DEBUG     4
 
-#define ACCESS_LOG_FILENAME   "access.log"
-#define SERVER_LOG_FILENAME   "server.log"
-
 FILE *_log_access_fd,
      *_log_server_fd;
 

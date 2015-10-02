@@ -49,10 +49,20 @@ void readValue(size_t lineIndex, char *line, char *value, size_t size)
 
 int parseConfig(struct configuration *config)
 {
-  FILE *configFile = loadConfig(CONFIG_PATH);
-  char *line = NULL;
+  FILE *configFile;
+  char buffert[PATH_MAX], realPathBuff[PATH_MAX];
+  char *line = NULL, *tmp, *savetmp;
   char value[64] = {'\0'};
   size_t  lineIndex = 0, len = 64;
+
+  sprintf(buffert, "%s/%s", config->rootDir, CONFIG_PATH);
+
+  printf("%s\n", buffert);
+
+  tmp = strtok_r(buffert, "/", &savetmp);
+
+  printf("%s, %s\n", tmp, savetmp);
+  configFile = loadConfig(realPathBuff);
 
   printf("Parsing config file\n" );
 
@@ -111,11 +121,51 @@ int parseConfig(struct configuration *config)
       }
       else if (startsWith("Basedir", line + lineIndex))
       {
+        // Move pass variable name
+        lineIndex += strlen("Basedir:");
 
+        readValue(lineIndex, line, value, sizeof(value));
+
+        // Get the realpath to the basedirectory
+        if(realpath(value, buffert) == NULL){
+          printf("Invalid config, basedirectory: %s, %s\n", buffert, strerror(errno));
+          exit(-1);
+        }
+
+        // Change basedirectory to the realpath
+        config->basedir = buffert;
       }
-      else if (startsWith("Logpath", line + lineIndex))
+      else if (startsWith("Access_logpath", line + lineIndex))
       {
+        // Move pass variable name
+        lineIndex += strlen("Access_logpath:");
 
+        readValue(lineIndex, line, value, sizeof(value));
+
+        // Get the realpath to the basedirectory
+        if(realpath(value, buffert) == NULL){
+          printf("Invalid config, access logpath: %s, %s\n", buffert, strerror(errno));
+          exit(-1);
+        }
+
+        // Change basedirectory to the realpath
+        config->accLogPath = buffert;
+      }
+      else if (startsWith("Server_logpath", line + lineIndex))
+      {
+        // Move pass variable name
+        lineIndex += strlen("Basedir:");
+
+        readValue(lineIndex, line, value, sizeof(value));
+
+        // Get the realpath to the basedirectory
+        if(realpath(value, buffert) == NULL){
+          printf("Invalid config, server logpath: %s, %s\n", buffert, strerror(errno));
+          exit(-1);
+        }
+
+        // Change basedirectory to the realpath
+        config->srvLogPath = buffert;
       }
       else
       {

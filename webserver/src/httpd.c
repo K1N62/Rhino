@@ -14,7 +14,7 @@
 #include "httpd.h"
 
 int main(int argc, char* argv[]) {
-
+  char realPathBuff[PATH_MAX];
   int i, port, sd, sd_current, addrlen;
   struct sockaddr_in sin, pin;
   pthread_t handler;
@@ -28,6 +28,7 @@ int main(int argc, char* argv[]) {
   setDefaultConfig(&config);
 
   // Parse config file
+  config.rootDir = realpath(argv[0], realPathBuff);
   parseConfig(&config);
 
   if(argc > 1) {
