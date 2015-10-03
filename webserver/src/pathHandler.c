@@ -4,12 +4,12 @@
 void rootDir(struct configuration *config, char *path){
   char *folder = "/bin/httpd";
   char pathBuffert[PATH_MAX];
-  int size = 0;
+  size_t size;
 
   realpath(path, pathBuffert);
 
-  while(pathBuffert[size] != '\0'){size++;}
+  size = strlen(pathBuffert);
 
-  pathBuffert[(size - sizeof(folder) - 2)] = '\0';
+  pathBuffert[size - strlen(folder)] = '\0';
   config->rootDir = pathBuffert;
 }

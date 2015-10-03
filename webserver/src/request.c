@@ -1,4 +1,7 @@
-
+/*
+	TODO:
+	Header errors
+*/
 #include "request.h"
 
 /* Send Line	(Private)
@@ -136,7 +139,7 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 void *requestHandle(void *context)
 {
 	// Get the arguments
-	char 	buffert[128],
+	char 	buffert[PATH_MAX],
 				reqBuf[REQ_BUFSIZE],
 				date[64],
 				*req_line,
@@ -144,6 +147,7 @@ void *requestHandle(void *context)
 	struct _rqhd_header head;
 	struct _rqhd_args *args = (struct _rqhd_args*) context;
 	struct _rqhd_req req;
+	struct configuration *config = args->config;
 	struct sockaddr_in pin = args->pin;
 	int 	sd = args->sd;
 	memset(date, '\0', sizeof(date));
@@ -204,17 +208,29 @@ void *requestHandle(void *context)
 		req.uri				= "errpg/400.html";
 	}
 
-	// JAIL HERE
-	// Use realpath on uri
-	// Remove first '/'
-	if (buffert[0] == '/') {
-		memmove(buffert, buffert+1, strlen(buffert));
-	}
-	// If '/' was only character in uri set index
-	if (strlen(buffert) == 0) {
-		req.uri = "www/index.html";
+	// Fix relative basedir error
+	if (config->basedir[0] != '/') {
+		// Set relative root dir
+		char realPathBuff[PATH_MAX];
+		sprintf(buffert, "%s/%s", config->rootDir, config->basedir);
+		realpath(buffert, realPathBuff);
+		config->basedir = realPathBuff;
 	}
 
+	// JAIL HERE
+	// Use realpath on uri
+	// If '/' was only character in uri set index
+	if (strlen(req.uri) == 1) {
+		sprintf(buffert, "%s%s", config->basedir, "/index.html");
+		req.uri = buffert;
+	}
+	// Else set the requested file
+	else {
+		sprintf(buffert, "%s%s", config->basedir, req.uri);
+		req.uri = buffert;
+	}
+
+	// Get realpath
 	if (realpath(req.uri, buffert) == NULL) {
 		// If invalid path set 403 Forbidden
 		req.method		= "GET";

@@ -24,6 +24,16 @@ FILE* loadConfig(char *path)
   }
 }
 
+/* Read value (Private)
+ *
+ * Reads a value from a config file line
+ *
+ * @lineIndex    size_t, the line offset
+ * @line         string, the line to search in
+ * @value        string, the output array
+ * @size         size_t, size of the output array
+ * @return       void
+ */
 void readValue(size_t lineIndex, char *line, char *value, size_t size)
 {
   // Set variables
@@ -50,14 +60,15 @@ void readValue(size_t lineIndex, char *line, char *value, size_t size)
 int parseConfig(struct configuration *config)
 {
   FILE *configFile;
-  char buffert[PATH_MAX];
-  char *line = NULL, *tmp, *savetmp;
-  char value[64] = {'\0'};
-  size_t  lineIndex = 0, len = 64;
+  char buffert[PATH_MAX], realPathBuff[PATH_MAX];
+  char *line = NULL;
+  char value[256] = {'\0'};
+  size_t  lineIndex = 0, len = sizeof(value);
 
   sprintf(buffert, "%s/%s", config->rootDir, CONFIG_PATH);
+  realpath(buffert, realPathBuff);
 
-  configFile = loadConfig(buffert);
+  configFile = loadConfig(realPathBuff);
 
   printf("Parsing config file\n" );
 
@@ -121,14 +132,17 @@ int parseConfig(struct configuration *config)
 
         readValue(lineIndex, line, value, sizeof(value));
 
-        // Get the realpath to the basedirectory
-        if(realpath(value, buffert) == NULL){
-          printf("Invalid config, basedirectory: %s, %s\n", buffert, strerror(errno));
+        // relative the root dir
+        sprintf(buffert, "%s/%s", config->rootDir, value);
+
+        // Get the realpath
+        if(realpath(buffert, realPathBuff) == NULL){
+          printf("Invalid config, basedirectory: %s, %s\n", realPathBuff, strerror(errno));
           exit(-1);
         }
-
+        char *tmp = malloc(PATH_MAX); strcpy(tmp, realPathBuff);
         // Change basedirectory to the realpath
-        config->basedir = buffert;
+        config->basedir = tmp;
       }
       else if (startsWith("Access_logpath", line + lineIndex))
       {
@@ -137,30 +151,36 @@ int parseConfig(struct configuration *config)
 
         readValue(lineIndex, line, value, sizeof(value));
 
-        // Get the realpath to the basedirectory
-        if(realpath(value, buffert) == NULL){
-          printf("Invalid config, access logpath: %s, %s\n", buffert, strerror(errno));
+        // relative the root dir
+        sprintf(buffert, "%s/%s", config->rootDir, value);
+
+        // Get the realpath
+        if(realpath(buffert, realPathBuff) == NULL){
+          printf("Invalid config, access logpath: %s, %s\n", realPathBuff, strerror(errno));
           exit(-1);
         }
-
-        // Change basedirectory to the realpath
-        config->accLogPath = buffert;
+        char tmp[PATH_MAX]; strcpy(tmp, realPathBuff);
+        // Change accLogPath to the realpath
+        config->accLogPath = tmp;
       }
       else if (startsWith("Server_logpath", line + lineIndex))
       {
         // Move pass variable name
-        lineIndex += strlen("Basedir:");
+        lineIndex += strlen("Server_logpath:");
 
         readValue(lineIndex, line, value, sizeof(value));
 
-        // Get the realpath to the basedirectory
-        if(realpath(value, buffert) == NULL){
-          printf("Invalid config, server logpath: %s, %s\n", buffert, strerror(errno));
+        // relative the root dir
+        sprintf(buffert, "%s/%s", config->rootDir, value);
+
+        // Get the realpath
+        if(realpath(buffert, realPathBuff) == NULL){
+          printf("Invalid config, server logpath: %s, %s\n", realPathBuff, strerror(errno));
           exit(-1);
         }
-
-        // Change basedirectory to the realpath
-        config->srvLogPath = buffert;
+        char tmp[PATH_MAX]; strcpy(tmp, realPathBuff);
+        // Change srvLogPath to the realpath
+        config->srvLogPath = tmp;
       }
       else
       {

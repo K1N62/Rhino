@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
   setDefaultConfig(&config);
 
   // Parse config file
-  rootDir(&config, argv[0]);
+  rootDir(&config, argv[0]); 
   parseConfig(&config);
 
   if(argc > 1) {
@@ -160,17 +160,15 @@ int main(int argc, char* argv[]) {
   		DIE_CLEANUP
   	}
 
-    // Make this a new thread
-    // Pass the socket to the handler
-
     // Create arguments struct
     struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
     if (args == NULL) {
       printf("CRITICAL: Unable to allocate memory\n");
   		DIE_CLEANUP
     }
-    args->sd   = sd_current;
-    args->pin  = pin;
+    args->sd      = sd_current;
+    args->pin     = pin;
+    args->config  = &config;
 
     if(pthread_create(&handler, &att, requestHandle, args) != 0) {
       printf("CRITICAL: Unable to start thread\n");

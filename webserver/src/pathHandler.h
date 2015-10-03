@@ -1,4 +1,3 @@
-
 /* Path handler header file
  *
  * Declares functions that will be used for handling paths
