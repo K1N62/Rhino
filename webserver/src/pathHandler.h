@@ -8,9 +8,4 @@
 
 #include "httpd.h"
 
-struct pathHandler {
-  char *path;
-  char *filename;
-};
-
-void setRootDir(struct configuration *config);
+void rootDir(struct configuration *config, char *path);

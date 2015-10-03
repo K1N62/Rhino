@@ -4,7 +4,7 @@
 #include "httpd.h"
 
 #define CONFIG_FILENAME   "httpd.conf"
-#define CONFIG_PATH       "../../config/" CONFIG_FILENAME
+#define CONFIG_PATH       "config/" CONFIG_FILENAME
 
 /* Parse log file
  *

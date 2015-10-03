@@ -50,19 +50,14 @@ void readValue(size_t lineIndex, char *line, char *value, size_t size)
 int parseConfig(struct configuration *config)
 {
   FILE *configFile;
-  char buffert[PATH_MAX], realPathBuff[PATH_MAX];
+  char buffert[PATH_MAX];
   char *line = NULL, *tmp, *savetmp;
   char value[64] = {'\0'};
   size_t  lineIndex = 0, len = 64;
 
   sprintf(buffert, "%s/%s", config->rootDir, CONFIG_PATH);
 
-  printf("%s\n", buffert);
-
-  tmp = strtok_r(buffert, "/", &savetmp);
-
-  printf("%s, %s\n", tmp, savetmp);
-  configFile = loadConfig(realPathBuff);
+  configFile = loadConfig(buffert);
 
   printf("Parsing config file\n" );
 

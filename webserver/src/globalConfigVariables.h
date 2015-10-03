@@ -15,6 +15,7 @@ struct configuration {
   char *accLogPath;
   char *srvLogPath;
   char *rootDir;
+  char *configPath;
   int   listenPort;
   int   backlog;
 };
