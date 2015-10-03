@@ -15,6 +15,7 @@ struct configuration {
   char *basedir;
   char *accLogPath;
   char *srvLogPath;
+  char *configPath;
   int   listenPort;
   int   backlog;
 };

@@ -3,14 +3,10 @@
 
 void daemonfunc(const char *cmd)
 {
-    int i, fd0, fd1, fd2;
+    int i;
     pid_t pid;
     struct rlimit       rl;
     struct sigaction    sa;
-    /*
-     *      * Clear file creation mask.
-     *           */
-    umask(0);
 
     /*
      *      * Get maximum number of file descriptors.
@@ -29,7 +25,7 @@ void daemonfunc(const char *cmd)
     }
     else if (pid != 0) /* parent */
         exit(0);
-    setsid();
+
 
     /*
      *      * Ensure future opens won't allocate controlling TTYs.
@@ -49,6 +45,13 @@ void daemonfunc(const char *cmd)
         exit(0);
 
     /*
+     *      * Clear file creation mask.
+     *           */
+    umask(0);
+
+    setsid();
+
+    /*
      *      * Change the current working directory to the root so
      *           * we won't prevent file systems from being unmounted.
      *                */
@@ -65,12 +68,10 @@ void daemonfunc(const char *cmd)
     for (i = 0; i < rl.rlim_max; i++)
         close(i);
 
-    /*
-     *      * Attach file descriptors 0, 1, and 2 to /dev/null.
-     *           */
-    fd0 = open("/dev/null", O_RDWR);
-    fd1 = open("/dev/null", O_RDWR);
-    fd2 = open("/dev/null", O_RDWR);
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+  close(STDERR_FILENO);
+
 
 }
 
@@ -145,5 +146,5 @@ char* ccat(char *a, char *b, size_t size)
 
 void printHelp(void)
 {
-  printf("\n -h \t Print help text \n -p \t port, Select port to listen to \n -d \t Run webserver as a daemon \n -l \t logfile, Log to logfile \n    \t If not specified, logging will be output to syslog \n -s \t |thread|, Select request handling method \n\n");
+  printf("\n -h \t Print help text \n -p \t port, Select port to listen to \n -d \t Run webserver as a daemon \n -l \t logfile, Log to logfile \n    \t If not specified, logging will be output to syslog \n -s \t |thread|, Select request handling method \n -c \t absolute path to config, If not set process will try finding it\n\n");
 }

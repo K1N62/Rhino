@@ -27,6 +27,7 @@ int main(int argc, char* argv[]) {
   setDefaultConfig(&config);
 
   // Parse config file
+  rootDir(&config, argv[0]); 
   parseConfig(&config);
 
   if(argc > 1) {
@@ -39,7 +40,6 @@ int main(int argc, char* argv[]) {
         case 'p':
           i++;
           if(i >= argc) {
-            printf("ERROR: WRONG USAGE\n");
             printHelp();
             return 0;
           }
@@ -49,13 +49,11 @@ int main(int argc, char* argv[]) {
               printf("Port number: %d\n", port);
             }
             else {
-              printf("ERROR: WRONG USAGE\n");
               printHelp();
               return 0;
             }
           }
           else {
-            printf("ERROR: WRONG USAGE\n");
             printHelp();
             return 0;
           }
@@ -64,11 +62,11 @@ int main(int argc, char* argv[]) {
           // Start daemon if set
           printf("Starting daemon...\n");
           daemonfunc("daemon");
+          while(1){}
           break;
         case 'l':
           i++;
           if(i >= argc) {
-            printf("ERROR: WRONG USAGE\n");
             printHelp();
             return 0;
           }
@@ -76,7 +74,6 @@ int main(int argc, char* argv[]) {
             config.accLogPath = argv[i];
           }
           else {
-            printf("ERROR: WRONG USAGE\n");
             printHelp();
             return 0;
           }
@@ -84,7 +81,6 @@ int main(int argc, char* argv[]) {
         case 's':
           i++;
           if(i >= argc) {
-            printf("ERROR: WRONG USAGE\n");
             printHelp();
             return 0;
           }
@@ -92,7 +88,20 @@ int main(int argc, char* argv[]) {
             printf("Starting: %s as selected request handling method\n", argv[i]);
           else
           {
-            printf("ERROR: WRONG USAGE\n");
+            printHelp();
+            return 0;
+          }
+          break;
+        case 'c':
+          i++;
+          if(i >= argc){
+            printHelp();
+            return 0;
+          }
+          if(argv[i][0] != '-') {
+            config.configPath = argv[i];
+          }
+          else {
             printHelp();
             return 0;
           }

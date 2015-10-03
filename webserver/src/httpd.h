@@ -36,6 +36,7 @@
 // Global lock
 pthread_mutex_t thread_lock;
 
+#include "pathHandler.h"
 #include "globalConfigVariables.h"
 #include "config.h"
 #include "log.h"
