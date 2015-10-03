@@ -14,7 +14,6 @@
 #include "httpd.h"
 
 int main(int argc, char* argv[]) {
-  char realPathBuff[PATH_MAX];
   int i, port, sd, sd_current, addrlen;
   struct sockaddr_in sin, pin;
   pthread_t handler;
@@ -28,7 +27,6 @@ int main(int argc, char* argv[]) {
   setDefaultConfig(&config);
 
   // Parse config file
-  config.rootDir = realpath(argv[0], realPathBuff);
   parseConfig(&config);
 
   if(argc > 1) {
@@ -153,17 +151,15 @@ int main(int argc, char* argv[]) {
   		DIE_CLEANUP
   	}
 
-    // Make this a new thread
-    // Pass the socket to the handler
-
     // Create arguments struct
     struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
     if (args == NULL) {
       printf("CRITICAL: Unable to allocate memory\n");
   		DIE_CLEANUP
     }
-    args->sd   = sd_current;
-    args->pin  = pin;
+    args->sd      = sd_current;
+    args->pin     = pin;
+    args->config  = &config;
 
     if(pthread_create(&handler, &att, requestHandle, args) != 0) {
       printf("CRITICAL: Unable to start thread\n");

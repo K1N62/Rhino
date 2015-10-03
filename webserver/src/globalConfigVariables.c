@@ -4,7 +4,8 @@
 void setDefaultConfig(struct configuration *config)
 {
   config->servername    = "127.0.0.1";
-  config->basedir       = "../../www";
+  config->rootDir       = "/home/student/Dokument/GitHub/server/webserver";
+  config->basedir       = "../www";
   config->accLogPath    = "log/access.log";
   config->srvLogPath    = "log/server.log";
   config->listenPort    = 80;

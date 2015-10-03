@@ -11,10 +11,10 @@
 
 struct configuration {
   char *servername;
+  char *rootDir;
   char *basedir;
   char *accLogPath;
   char *srvLogPath;
-  char *rootDir;
   int   listenPort;
   int   backlog;
 };

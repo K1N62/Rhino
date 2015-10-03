@@ -21,6 +21,7 @@
 struct _rqhd_args {
   int sd;
   struct sockaddr_in pin;
+  struct configuration *config;
 };
 
 struct _rqhd_header {
