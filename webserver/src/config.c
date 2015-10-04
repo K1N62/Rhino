@@ -65,9 +65,9 @@ int parseConfig(struct configuration *config)
   char value[256] = {'\0'};
   size_t  lineIndex = 0, len = sizeof(value);
 
-  sprintf(buffert, "%s/%s", config->rootDir, CONFIG_PATH);
+  sprintf(buffert, "%s/%s", config->rootDir, config->configPath);
   realpath(buffert, realPathBuff);
-
+printf("%s\n", realPathBuff);
   configFile = loadConfig(realPathBuff);
 
   printf("Parsing config file\n" );
@@ -93,12 +93,12 @@ int parseConfig(struct configuration *config)
         // Check if value is an valid ip address
         if (isValidIpAddress(value))
         {
-          config->servername = value;
+          strcpy(config->servername,  value);
         }
         // Otherwise check if it's an valid domain name and resolve it
         else if(hostnameToIp(value))
         {
-          config->servername = value;
+          strcpy(config->servername,  value);
         }
         // Else this is not a valid config
         else
@@ -140,9 +140,9 @@ int parseConfig(struct configuration *config)
           printf("Invalid config, basedirectory: %s, %s\n", realPathBuff, strerror(errno));
           exit(-1);
         }
-        char *tmp = malloc(PATH_MAX); strcpy(tmp, realPathBuff);
+
         // Change basedirectory to the realpath
-        config->basedir = tmp;
+        strcpy(config->basedir, realPathBuff);
       }
       else if (startsWith("Access_logpath", line + lineIndex))
       {
@@ -159,9 +159,9 @@ int parseConfig(struct configuration *config)
           printf("Invalid config, access logpath: %s, %s\n", realPathBuff, strerror(errno));
           exit(-1);
         }
-        char tmp[PATH_MAX]; strcpy(tmp, realPathBuff);
+
         // Change accLogPath to the realpath
-        config->accLogPath = tmp;
+        strcpy(config->accLogPath, realPathBuff);
       }
       else if (startsWith("Server_logpath", line + lineIndex))
       {
@@ -178,13 +178,9 @@ int parseConfig(struct configuration *config)
           printf("Invalid config, server logpath: %s, %s\n", realPathBuff, strerror(errno));
           exit(-1);
         }
-        char tmp[PATH_MAX]; strcpy(tmp, realPathBuff);
+
         // Change srvLogPath to the realpath
-        config->srvLogPath = tmp;
-      }
-      else
-      {
-        printf("Invalid configuration");
+        strcpy(config->srvLogPath, realPathBuff);
       }
     }
   }

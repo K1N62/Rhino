@@ -151,8 +151,7 @@ void *requestHandle(void *context)
 	struct sockaddr_in pin = args->pin;
 	int 	sd = args->sd;
 	memset(date, '\0', sizeof(date));
-
-  printf("Request from %s:%i\n", inet_ntoa(pin.sin_addr), ntohs(pin.sin_port));
+	FILE *reqFile;
 
   // Recieve the data, thank you
   if (recv(sd, reqBuf, sizeof(reqBuf), 0) == -1) {
@@ -184,37 +183,32 @@ void *requestHandle(void *context)
 					} else {
 						// If invalid protocol set 400 Bad Request
 						head.status 	= "400 Bad Request";
-						req.uri				= "errpg/400.html";
+						sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
+						req.uri				= buffert;
 					}
 				} else {
 					// If no protocol set 400 Bad Request
 					head.status 	= "400 Bad Request";
-					req.uri				= "errpg/400.html";
+					sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
+					req.uri				= buffert;
 				}
 			} else {
 				// If no uri set 400 Bad Request
 				head.status 	= "400 Bad Request";
-				req.uri				= "errpg/400.html";
+				sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
+				req.uri				= buffert;
 			}
 		} else {
 			// If invalid method set 501 Not Implemented
 			head.status 	= "501 Not Implemented";
-			req.uri				= "errpg/501.html";
+			sprintf(buffert, "%s/%s", config->rootDir, "errpg/501.html");
+			req.uri				= buffert;
 		}
 	} else {
 		// If no method set 400 Bad Request
-		req.method		= "GET";
 		head.status 	= "400 Bad Request";
-		req.uri				= "errpg/400.html";
-	}
-
-	// Fix relative basedir error
-	if (config->basedir[0] != '/') {
-		// Set relative root dir
-		char realPathBuff[PATH_MAX];
-		sprintf(buffert, "%s/%s", config->rootDir, config->basedir);
-		realpath(buffert, realPathBuff);
-		config->basedir = realPathBuff;
+		sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
+		req.uri				= buffert;
 	}
 
 	// JAIL HERE
@@ -231,18 +225,24 @@ void *requestHandle(void *context)
 	}
 
 	// Get realpath
-	if (realpath(req.uri, buffert) == NULL) {
+	/*if (realpath(req.uri, buffert) == NULL) {
 		// If invalid path set 403 Forbidden
-		req.method		= "GET";
 		head.status 	= "403 Forbidden";
 		req.uri				= "errpg/403.html";
-	}
+	}*/
 
 	// Open the file
-	FILE *reqFile = fopen(buffert, "r");
-	if (reqFile == NULL) {
-		printf("ERROR: Unable to open requested file\n");
-		DIE_CON
+	if ((reqFile = fopen(buffert, "r")) == NULL) {
+		log_server(LOG_INFO, "The requested pages was not found");
+		head.status 	= "404 Not Found";
+		req.uri				= "errpg/404.html";
+		sprintf(buffert, "%s/%s", config->rootDir, req.uri);
+		if ((reqFile = fopen(buffert, "r")) == NULL) {
+			log_server(LOG_WARN, "The error page could not be found");
+		}
+	}
+	else {
+		head.status = "200 OK";
 	}
 
 	// Get the file size
@@ -273,7 +273,7 @@ void *requestHandle(void *context)
 
 	// Send the requested file if method is GET
 	if (strcmp(req.method, "GET")) {
-		if (sendfile(sd, fileno(reqFile), NULL , stat_buf.st_size) == -1)	{
+		if (sendfile(sd, fileno(reqFile), NULL, stat_buf.st_size) == -1)	{
 			printf("ERROR: Unable to send requested file, %s\n", strerror(errno));
 			DIE_CON
 		}

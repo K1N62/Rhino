@@ -9,13 +9,17 @@
 
 #pragma once
 
+#include <string.h>
+
+#define BUF_VAR 4096
+
 struct configuration {
-  char *servername;
-  char *rootDir;
-  char *basedir;
-  char *accLogPath;
-  char *srvLogPath;
-  char *configPath;
+  char servername[BUF_VAR];
+  char rootDir[BUF_VAR];
+  char basedir[BUF_VAR];
+  char accLogPath[BUF_VAR];
+  char srvLogPath[BUF_VAR];
+  char configPath[BUF_VAR];
   int   listenPort;
   int   backlog;
 };

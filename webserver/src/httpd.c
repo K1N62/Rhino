@@ -27,7 +27,8 @@ int main(int argc, char* argv[]) {
   setDefaultConfig(&config);
 
   // Parse config file
-  rootDir(&config, argv[0]); 
+  path_init(&config);
+  rootDir(argv[0]);
   parseConfig(&config);
 
   if(argc > 1) {
@@ -62,7 +63,7 @@ int main(int argc, char* argv[]) {
           // Start daemon if set
           printf("Starting daemon...\n");
           daemonfunc("daemon");
-          while(1){}
+
           break;
         case 'l':
           i++;
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]) {
             return 0;
           }
           if(argv[i][0] != '-') {
-            config.accLogPath = argv[i];
+            strcpy(config.accLogPath, argv[i]);
           }
           else {
             printHelp();
@@ -99,7 +100,7 @@ int main(int argc, char* argv[]) {
             return 0;
           }
           if(argv[i][0] != '-') {
-            config.configPath = argv[i];
+            strcpy(config.configPath, argv[i]);
           }
           else {
             printHelp();
@@ -176,7 +177,6 @@ int main(int argc, char* argv[]) {
     }
 
   }
-
 
   // Clean up
   pthread_attr_destroy(&att);

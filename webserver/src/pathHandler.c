@@ -1,8 +1,14 @@
 
 #include "pathHandler.h"
 
-void rootDir(struct configuration *config, char *path){
-  char *folder = "/bin/httpd";
+void path_init(struct configuration *config)
+{
+  _path_config = config;
+}
+
+void rootDir(char *path)
+{
+  char *folder = PATH_BIN;
   char pathBuffert[PATH_MAX];
   size_t size;
 
@@ -11,5 +17,24 @@ void rootDir(struct configuration *config, char *path){
   size = strlen(pathBuffert);
 
   pathBuffert[size - strlen(folder)] = '\0';
-  config->rootDir = pathBuffert;
+  strcpy(_path_config->rootDir, pathBuffert);
+}
+
+char* getRelRoot(char *path)
+{
+  char buffert[PATH_MAX], *retPath;
+
+  // relative the root dir
+  sprintf(buffert, "%s/%s", _path_config->rootDir, path);
+
+  // Get the realpath
+  retPath = realpath(buffert, NULL);
+  if(retPath == NULL){
+    printf("Unable to resolve path: %s, %s\n", buffert, strerror(errno));
+    return NULL;
+  }
+  else {
+    return retPath;
+  }
+
 }

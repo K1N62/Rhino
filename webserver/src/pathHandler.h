@@ -7,4 +7,12 @@
 
 #include "httpd.h"
 
-void rootDir(struct configuration *config, char *path);
+#define PATH_BIN "/bin/httpd"
+
+struct configuration *_path_config;
+
+void path_init(struct configuration *config);
+
+void rootDir(char *path);
+
+char* getRelRoot(char *path);
