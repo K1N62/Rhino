@@ -14,6 +14,9 @@ void log_init(struct configuration *config)
     printf("CRITICAL: Unable to open log %s, %s\n", config->srvLogPath, strerror(errno));
     exit(-1);
   }
+
+  // Get the lenght of doc root
+  _log_docRootLen = strlen(config->basedir);
 }
 
 void log_destroy()
@@ -25,10 +28,11 @@ void log_destroy()
 void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header)
 {
   time_t t = time(NULL);
-  char entry[4096];
-  char date[64];
-  char ip[INET_ADDRSTRLEN];
-  char req[1024]; // Safe from overflow, each request value can be maximum BUF_VAL (256)
+  char  entry[4096],
+        date[64],
+        ip[INET_ADDRSTRLEN],
+        status[4],
+        req[1024]; // Safe from overflow, each request value can be maximum BUF_VAL (256)
 
   // Get the date
   strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&t));
@@ -37,7 +41,9 @@ void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request,
   inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN);
 
   // Get the request
-  sprintf(req, "\"%s %s\" %s %d", request->method, request->uri, header->status, header->size);
+  // We only want the numbers
+  strncpy(status, header->status, sizeof(status) - 1);
+  sprintf(req, "\"%s %s\" %s %d", request->method, request->uri + _log_docRootLen, status, header->size);
 
   // Set the entry
   sprintf(entry, "%s - - [%s] %s\n", ip, date, req);

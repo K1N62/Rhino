@@ -16,6 +16,7 @@
 int main(int argc, char* argv[]) {
   int i, port, sd, sd_current, addrlen;
   struct sockaddr_in sin, pin;
+  char error[1024];
   pthread_t handler;
   pthread_attr_t att;
 
@@ -157,14 +158,16 @@ int main(int argc, char* argv[]) {
   while(true) {
     // Accept a request from queue, blocking
     if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
-  		printf("ERROR: Unable to accept request, OS won't share, %s\n", strerror(errno));
+  		sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
+      log_server(LOG_ERROR, error);
   		DIE_CLEANUP
   	}
 
     // Create arguments struct
     struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
     if (args == NULL) {
-      printf("CRITICAL: Unable to allocate memory\n");
+      sprintf(error, "Unable to allocate memory, %s", strerror(errno));
+      log_server(LOG_CRITICAL, error);
   		DIE_CLEANUP
     }
     args->sd      = sd_current;
@@ -172,10 +175,10 @@ int main(int argc, char* argv[]) {
     args->config  = &config;
 
     if(pthread_create(&handler, &att, requestHandle, args) != 0) {
-      printf("CRITICAL: Unable to start thread\n");
+      sprintf(error, "Unable to start thread, %s", strerror(errno));
+      log_server(LOG_CRITICAL, error);
   		DIE_CLEANUP
     }
-
   }
 
   // Clean up

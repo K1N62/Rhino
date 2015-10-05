@@ -2,13 +2,12 @@
 /* Log Header
  *
  *  Declares functions and macros for the log functions
- TODO:
- skapar inte logiflen o mden inet finns
  */
 
 #pragma once
 
 #include "httpd.h"
+#include "request.h"
 
 #define LOG_CRITICAL  0
 #define LOG_ERROR     1
@@ -18,6 +17,8 @@
 
 FILE *_log_access_fd,
      *_log_server_fd;
+
+int _log_docRootLen;
 
 void log_init(struct configuration *config);
 

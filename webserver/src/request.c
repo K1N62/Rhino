@@ -1,6 +1,6 @@
 /*
 	TODO:
-	Header errors
+	check for basedir minimum
 */
 #include "request.h"
 
@@ -147,6 +147,7 @@ void *requestHandle(void *context)
 	char 	buffert[PATH_MAX],
 				reqBuf[BUF_REQ],
 				date[64],
+				error[1024],
 				*req_line,
 				*req_token;
 	struct _rqhd_header head;
@@ -161,16 +162,20 @@ void *requestHandle(void *context)
 
   // Recieve the data, thank you
   if (recv(sd, reqBuf, sizeof(reqBuf), 0) == -1) {
-    printf("ERROR: Unable to recieve request\n");
-    close(sd); free(args); pthread_exit(NULL);
+		sprintf(error, "Unable to recieve request, %s", strerror(errno));
+		log_server(LOG_ERROR, error);
+		// Cleanup
+    close(sd);
+		free(args);
+		pthread_exit(NULL);
   }
 
 	// PARSE REQUEST -------------------------------------
 	// First line is the actual request
 	req_line = strtok(reqBuf, "\r\n");
-	req_token = strtok(req_line, " ");
 
 	// Check if GET or HEAD is set
+	req_token = strtok(req_line, " ");
 	if (req_token != NULL) {
 		if (strcmp(req_token, "GET") || strcmp(req_token, "HEAD")) {
 			strncpy(req.method, req_token, BUF_VAL);
@@ -183,15 +188,15 @@ void *requestHandle(void *context)
 				// Get Protocol
 				req_token = strtok(NULL, " ");
 				if (req_token != NULL) {
-					if (strcmp(req_token, "HTTP/"_HTTP_VER)) {
+					//if (strcmp(req_token, "HTTP/"_HTTP_VER) == 0) {
 						strncpy(req.protocol, req_token, BUF_VAL);
 
-					} else {
+					/*} else {
 						// If invalid protocol set 400 Bad Request
 						strncpy(head.status, "400 Bad Request", BUF_VAL);
 						sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
 						strncpy(req.uri, buffert, BUF_VAL);
-					}
+					}*/
 				} else {
 					// If no protocol set 400 Bad Request
 					strncpy(head.status, "400 Bad Request", BUF_VAL);
@@ -217,8 +222,6 @@ void *requestHandle(void *context)
 		strncpy(req.uri, buffert, BUF_VAL);
 	}
 
-	// JAIL HERE
-	// Use realpath on uri
 	// If '/' was only character in uri set index
 	if (strlen(req.uri) == 1) {
 		sprintf(buffert, "%s%s", config->basedir, "/index.html");
@@ -230,26 +233,20 @@ void *requestHandle(void *context)
 		strncpy(req.uri, buffert, BUF_VAL);
 	}
 
-	// Get realpath
-	/*if (realpath(req.uri, buffert) == NULL) {
-		// If invalid path set 403 Forbidden
-		head.status 	= "403 Forbidden";
-		req.uri				= "errpg/403.html";
-	}*/
-
-	// Open the file
-	if ((reqFile = fopen(buffert, "r")) == NULL) {
+	// Check if file exists with realpath
+	if (realpath(req.uri, buffert) == NULL) {
+		// If file does not exists
 		log_server(LOG_INFO, "The requested pages was not found");
 		strncpy(head.status, "404 Not Found", BUF_VAL);
-		strncpy(req.uri, "errpg/404.html", BUF_VAL);
-		sprintf(buffert, "%s/%s", config->rootDir, req.uri);
-		if ((reqFile = fopen(buffert, "r")) == NULL) {
-			log_server(LOG_WARN, "The error page could not be found");
-		}
-	}
-	else {
+		// Load error page instead
+		sprintf(buffert, "%s/%s", config->rootDir, "errpg/404.html");
+	}	else {
 		strncpy(head.status, "200 OK", BUF_VAL);
 	}
+
+	// Open the file
+	reqFile = fopen(buffert, "r");
+
 
 	// Get the file size
 	fstat(fileno(reqFile), &stat_buf);
@@ -271,7 +268,8 @@ void *requestHandle(void *context)
 
 	// Send header
 	if (sendHeader(sd, &head) == -1) {
-		printf("ERROR: Unable to send header\n");
+		sprintf(error, "Unable to send header, %s", strerror(errno));
+		log_server(LOG_ERROR, error);
 		DIE_CON
 	}
 	// -------------------------------------------------------------------------
@@ -279,7 +277,8 @@ void *requestHandle(void *context)
 	// Send the requested file if method is GET
 	if (strcmp(req.method, "GET") == 0) {
 		if (sendfile(sd, fileno(reqFile), NULL, stat_buf.st_size) == -1)	{
-			printf("ERROR: Unable to send requested file, %s\n", strerror(errno));
+      sprintf(error, "Unable to send requested file, %s", strerror(errno));
+      log_server(LOG_ERROR, error);
 			DIE_CON
 		}
 	}

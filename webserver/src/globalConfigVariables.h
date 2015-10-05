@@ -20,8 +20,8 @@ struct configuration {
   char accLogPath[BUF_CFG];
   char srvLogPath[BUF_CFG];
   char configPath[BUF_CFG];
-  int   listenPort;
-  int   backlog;
+  int  listenPort;
+  int  backlog;
 };
 
 void setDefaultConfig(struct configuration *config);
