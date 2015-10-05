@@ -8,7 +8,8 @@
 
 #include "httpd.h"
 
-#define REQ_BUFSIZE 512
+#define BUF_REQ 1024
+#define BUF_VAL 256
 #define DIE_CON fclose(reqFile); close(sd); free(args); pthread_exit(NULL);
 
 #define _REQ_OK   "200" // OK
@@ -25,26 +26,26 @@ struct _rqhd_args {
 };
 
 struct _rqhd_header {
-  char *protocol;
-  char *status;
-  char *server;
-  char *type;
-  char *cache;
-  char *modified;
+  char protocol[BUF_VAL];
+  char status[BUF_VAL];
+  char server[BUF_VAL];
+  char type[BUF_VAL];
+  char cache[BUF_VAL];
+  char modified[BUF_VAL];
   int   size;
 };
 
 struct _rqhd_req_head {
-  char *host;
-  char *userAgent;
-  char *accept;
-  char *referer;
+  char host[BUF_VAL];
+  char userAgent[BUF_VAL];
+  char accept[BUF_VAL];
+  char referer[BUF_VAL];
 };
 
 struct _rqhd_req {
-  char *method;
-  char *uri;
-  char *protocol;
+  char method[BUF_VAL];
+  char uri[BUF_VAL];
+  char protocol[BUF_VAL];
   struct _rqhd_req_head *head;
 };
 

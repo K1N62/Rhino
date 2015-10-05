@@ -2,6 +2,8 @@
 /* Log Header
  *
  *  Declares functions and macros for the log functions
+ TODO:
+ skapar inte logiflen o mden inet finns
  */
 
 #pragma once

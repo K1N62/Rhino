@@ -11,15 +11,15 @@
 
 #include <string.h>
 
-#define BUF_VAR 4096
+#define BUF_CFG 4096
 
 struct configuration {
-  char servername[BUF_VAR];
-  char rootDir[BUF_VAR];
-  char basedir[BUF_VAR];
-  char accLogPath[BUF_VAR];
-  char srvLogPath[BUF_VAR];
-  char configPath[BUF_VAR];
+  char servername[BUF_CFG];
+  char rootDir[BUF_CFG];
+  char basedir[BUF_CFG];
+  char accLogPath[BUF_CFG];
+  char srvLogPath[BUF_CFG];
+  char configPath[BUF_CFG];
   int   listenPort;
   int   backlog;
 };

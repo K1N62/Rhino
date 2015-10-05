@@ -133,6 +133,11 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 	if(sendLine(sd, tmp) == -1)
 		return -1;
 
+	// End of header
+	sprintf(tmp, "\r\n");
+	if(sendLine(sd, tmp) == -1)
+		return -1;
+
 	return 0;
 }
 
@@ -140,7 +145,7 @@ void *requestHandle(void *context)
 {
 	// Get the arguments
 	char 	buffert[PATH_MAX],
-				reqBuf[REQ_BUFSIZE],
+				reqBuf[BUF_REQ],
 				date[64],
 				*req_line,
 				*req_token;
@@ -167,48 +172,48 @@ void *requestHandle(void *context)
 	// Check if GET or HEAD is set
 	if (req_token != NULL) {
 		if (strcmp(req_token, "GET") || strcmp(req_token, "HEAD")) {
-			req.method = req_token;
+			strncpy(req.method, req_token, BUF_VAL);
 
 			// Get uri
 			req_token = strtok(NULL, " ");
 			if (req_token != NULL) {
-				req.uri = req_token;
+				strncpy(req.uri, req_token, BUF_VAL);
 
 				// Get Protocol
 				req_token = strtok(NULL, " ");
 				if (req_token != NULL) {
 					if (strcmp(req_token, "HTTP/"_HTTP_VER)) {
-						req.protocol = req_token;
+						strncpy(req.protocol, req_token, BUF_VAL);
 
 					} else {
 						// If invalid protocol set 400 Bad Request
-						head.status 	= "400 Bad Request";
+						strncpy(head.status, "400 Bad Request", BUF_VAL);
 						sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
-						req.uri				= buffert;
+						strncpy(req.uri, buffert, BUF_VAL);
 					}
 				} else {
 					// If no protocol set 400 Bad Request
-					head.status 	= "400 Bad Request";
+					strncpy(head.status, "400 Bad Request", BUF_VAL);
 					sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
-					req.uri				= buffert;
+					strncpy(req.uri, buffert, BUF_VAL);
 				}
 			} else {
 				// If no uri set 400 Bad Request
-				head.status 	= "400 Bad Request";
+				strncpy(head.status, "400 Bad Request", BUF_VAL);
 				sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
-				req.uri				= buffert;
+				strncpy(req.uri, buffert, BUF_VAL);
 			}
 		} else {
 			// If invalid method set 501 Not Implemented
-			head.status 	= "501 Not Implemented";
-			sprintf(buffert, "%s/%s", config->rootDir, "errpg/501.html");
-			req.uri				= buffert;
+			strncpy(head.status, "501 Not Implemented", BUF_VAL);
+			sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
+			strncpy(req.uri, buffert, BUF_VAL);
 		}
 	} else {
 		// If no method set 400 Bad Request
-		head.status 	= "400 Bad Request";
+		strncpy(head.status, "400 Bad Request", BUF_VAL);
 		sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
-		req.uri				= buffert;
+		strncpy(req.uri, buffert, BUF_VAL);
 	}
 
 	// JAIL HERE
@@ -216,12 +221,12 @@ void *requestHandle(void *context)
 	// If '/' was only character in uri set index
 	if (strlen(req.uri) == 1) {
 		sprintf(buffert, "%s%s", config->basedir, "/index.html");
-		req.uri = buffert;
+		strncpy(req.uri, buffert, BUF_VAL);
 	}
 	// Else set the requested file
 	else {
 		sprintf(buffert, "%s%s", config->basedir, req.uri);
-		req.uri = buffert;
+		strncpy(req.uri, buffert, BUF_VAL);
 	}
 
 	// Get realpath
@@ -234,15 +239,15 @@ void *requestHandle(void *context)
 	// Open the file
 	if ((reqFile = fopen(buffert, "r")) == NULL) {
 		log_server(LOG_INFO, "The requested pages was not found");
-		head.status 	= "404 Not Found";
-		req.uri				= "errpg/404.html";
+		strncpy(head.status, "404 Not Found", BUF_VAL);
+		strncpy(req.uri, "errpg/404.html", BUF_VAL);
 		sprintf(buffert, "%s/%s", config->rootDir, req.uri);
 		if ((reqFile = fopen(buffert, "r")) == NULL) {
 			log_server(LOG_WARN, "The error page could not be found");
 		}
 	}
 	else {
-		head.status = "200 OK";
+		strncpy(head.status, "200 OK", BUF_VAL);
 	}
 
 	// Get the file size
@@ -251,18 +256,18 @@ void *requestHandle(void *context)
 
 	// HEADER -------------------------------------
 	// Server name
-	head.server 	= _NAME" "_VERSION;
+	strncpy(head.server, _NAME" "_VERSION, BUF_VAL);
 	// Protocol
-	head.protocol = "HTTP/"_HTTP_VER;
+	strncpy(head.protocol, "HTTP/"_HTTP_VER, BUF_VAL);
 	// Type
-	head.type 		= "text/html";
+	strncpy(head.type, "text/html", BUF_VAL);
 	// Size
-	head.size			= (int)stat_buf.st_size;
+	head.size	= (int)stat_buf.st_size;
 	// Cache
-	head.cache 		= "public";
+	strncpy(head.cache, "public", BUF_VAL);
 	// Last-Modified
 	strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&stat_buf.st_ctime));
-	head.modified	= date;
+	strncpy(head.modified, date, BUF_VAL);
 
 	// Send header
 	if (sendHeader(sd, &head) == -1) {
@@ -272,7 +277,7 @@ void *requestHandle(void *context)
 	// -------------------------------------------------------------------------
 
 	// Send the requested file if method is GET
-	if (strcmp(req.method, "GET")) {
+	if (strcmp(req.method, "GET") == 0) {
 		if (sendfile(sd, fileno(reqFile), NULL, stat_buf.st_size) == -1)	{
 			printf("ERROR: Unable to send requested file, %s\n", strerror(errno));
 			DIE_CON

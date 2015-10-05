@@ -67,7 +67,7 @@ int parseConfig(struct configuration *config)
 
   sprintf(buffert, "%s/%s", config->rootDir, config->configPath);
   realpath(buffert, realPathBuff);
-printf("%s\n", realPathBuff);
+
   configFile = loadConfig(realPathBuff);
 
   printf("Parsing config file\n" );
@@ -93,12 +93,12 @@ printf("%s\n", realPathBuff);
         // Check if value is an valid ip address
         if (isValidIpAddress(value))
         {
-          strcpy(config->servername,  value);
+          strncpy(config->servername,  value, BUF_CFG);
         }
         // Otherwise check if it's an valid domain name and resolve it
         else if(hostnameToIp(value))
         {
-          strcpy(config->servername,  value);
+          strncpy(config->servername,  value, BUF_CFG);
         }
         // Else this is not a valid config
         else
@@ -142,7 +142,7 @@ printf("%s\n", realPathBuff);
         }
 
         // Change basedirectory to the realpath
-        strcpy(config->basedir, realPathBuff);
+        strncpy(config->basedir, realPathBuff, BUF_CFG);
       }
       else if (startsWith("Access_logpath", line + lineIndex))
       {
@@ -161,7 +161,7 @@ printf("%s\n", realPathBuff);
         }
 
         // Change accLogPath to the realpath
-        strcpy(config->accLogPath, realPathBuff);
+        strncpy(config->accLogPath, realPathBuff, BUF_CFG);
       }
       else if (startsWith("Server_logpath", line + lineIndex))
       {
@@ -180,7 +180,7 @@ printf("%s\n", realPathBuff);
         }
 
         // Change srvLogPath to the realpath
-        strcpy(config->srvLogPath, realPathBuff);
+        strncpy(config->srvLogPath, realPathBuff, BUF_CFG);
       }
     }
   }
