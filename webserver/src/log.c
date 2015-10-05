@@ -22,20 +22,25 @@ void log_destroy()
   fclose(_log_server_fd);
 }
 
-void log_access(const struct sockaddr_in *addr, char *request, char *statusCode, int bytes)
+void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header)
 {
   time_t t = time(NULL);
-  char entry[1024];
+  char entry[4096];
   char date[64];
   char ip[INET_ADDRSTRLEN];
+  char req[1024]; // Safe from overflow, each request value can be maximum BUF_VAL (256)
 
   // Get the date
   strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&t));
 
+  // Get the IP
   inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN);
 
+  // Get the request
+  sprintf(req, "\"%s %s\" %s %d", request->method, request->uri, header->status, header->size);
+
   // Set the entry
-  sprintf(entry, "%s - - [%s] \"%s\" %s %d\n", ip, date, request, statusCode, bytes);
+  sprintf(entry, "%s - - [%s] %s\n", ip, date, req);
 
   // Get mutex and print to log
   pthread_mutex_lock(&thread_lock);

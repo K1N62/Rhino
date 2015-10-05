@@ -154,6 +154,7 @@ void *requestHandle(void *context)
 	struct _rqhd_req req;
 	struct configuration *config = args->config;
 	struct sockaddr_in pin = args->pin;
+	struct stat stat_buf;
 	int 	sd = args->sd;
 	memset(date, '\0', sizeof(date));
 	FILE *reqFile;
@@ -251,7 +252,6 @@ void *requestHandle(void *context)
 	}
 
 	// Get the file size
-	struct stat stat_buf;
 	fstat(fileno(reqFile), &stat_buf);
 
 	// HEADER -------------------------------------
@@ -285,7 +285,7 @@ void *requestHandle(void *context)
 	}
 
 	// Log
-	log_access(&pin, reqBuf, "200", stat_buf.st_size);
+	log_access(&pin, &req, &head);
 
 	// Cleanup
 	fclose(reqFile);

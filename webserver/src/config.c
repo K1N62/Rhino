@@ -155,10 +155,7 @@ int parseConfig(struct configuration *config)
         sprintf(buffert, "%s/%s", config->rootDir, value);
 
         // Get the realpath
-        if(realpath(buffert, realPathBuff) == NULL){
-          printf("Invalid config, access logpath: %s, %s\n", realPathBuff, strerror(errno));
-          exit(-1);
-        }
+        realpath(buffert, realPathBuff);
 
         // Change accLogPath to the realpath
         strncpy(config->accLogPath, realPathBuff, BUF_CFG);
@@ -174,10 +171,7 @@ int parseConfig(struct configuration *config)
         sprintf(buffert, "%s/%s", config->rootDir, value);
 
         // Get the realpath
-        if(realpath(buffert, realPathBuff) == NULL){
-          printf("Invalid config, server logpath: %s, %s\n", realPathBuff, strerror(errno));
-          exit(-1);
-        }
+        realpath(buffert, realPathBuff);
 
         // Change srvLogPath to the realpath
         strncpy(config->srvLogPath, realPathBuff, BUF_CFG);
