@@ -157,8 +157,19 @@ void *requestHandle(void *context)
 	struct sockaddr_in pin = args->pin;
 	struct stat stat_buf;
 	int 	sd = args->sd;
-	memset(date, '\0', sizeof(date));
 	FILE *reqFile;
+
+	// Init with zeroes
+	head.protocol[0] 	= '\0';
+	head.status[0] 		= '\0';
+	head.server[0] 		= '\0';
+	head.type[0] 			= '\0';
+	head.cache[0] 		= '\0';
+	head.modified[0] 	= '\0';
+	head.size 				= 0;
+	req.method[0] 		= '\0';
+	req.uri[0] 				= '\0';
+	req.protocol[0] 	= '\0';
 
   // Recieve the data, thank you
   if (recv(sd, reqBuf, sizeof(reqBuf), 0) == -1) {
@@ -177,7 +188,7 @@ void *requestHandle(void *context)
 	// Check if GET or HEAD is set
 	req_token = strtok(req_line, " ");
 	if (req_token != NULL) {
-		if (strcmp(req_token, "GET") || strcmp(req_token, "HEAD")) {
+		if (strcmp(req_token, "GET") == 0 || strcmp(req_token, "HEAD") == 0) {
 			strncpy(req.method, req_token, BUF_VAL);
 
 			// Get uri
@@ -212,7 +223,7 @@ void *requestHandle(void *context)
 		} else {
 			// If invalid method set 501 Not Implemented
 			strncpy(head.status, "501 Not Implemented", BUF_VAL);
-			sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
+			sprintf(buffert, "%s/%s", config->rootDir, "errpg/501.html");
 			strncpy(req.uri, buffert, BUF_VAL);
 		}
 	} else {
@@ -227,8 +238,8 @@ void *requestHandle(void *context)
 		sprintf(buffert, "%s%s", config->basedir, "/index.html");
 		strncpy(req.uri, buffert, BUF_VAL);
 	}
-	// Else set the requested file
-	else {
+	// Else set the requested file unleess the request is bad
+	else if(head.status[0] == '\0') {
 		sprintf(buffert, "%s%s", config->basedir, req.uri);
 		strncpy(req.uri, buffert, BUF_VAL);
 	}
@@ -240,7 +251,7 @@ void *requestHandle(void *context)
 		strncpy(head.status, "404 Not Found", BUF_VAL);
 		// Load error page instead
 		sprintf(buffert, "%s/%s", config->rootDir, "errpg/404.html");
-	}	else {
+	}	else if(head.status[0] == '\0') {
 		strncpy(head.status, "200 OK", BUF_VAL);
 	}
 

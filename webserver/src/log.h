@@ -7,7 +7,6 @@
 #pragma once
 
 #include "httpd.h"
-#include "request.h"
 
 #define LOG_CRITICAL  0
 #define LOG_ERROR     1
