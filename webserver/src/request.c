@@ -200,6 +200,7 @@ void *requestHandle(void *context)
 				req_token = strtok(NULL, " ");
 				if (req_token != NULL) {
 					//if (strcmp(req_token, "HTTP/"_HTTP_VER) == 0) {
+					//if (startsWith(req_token, "HTTP/")) {
 						strncpy(req.protocol, req_token, BUF_VAL);
 
 					/*} else {
@@ -247,7 +248,8 @@ void *requestHandle(void *context)
 	// Check if file exists with realpath
 	if (realpath(req.uri, buffert) == NULL) {
 		// If file does not exists
-		log_server(LOG_INFO, "The requested pages was not found");
+		sprintf(error, "%s was not found, sending error page instead", buffert + strlen(config->basedir));
+		log_server(LOG_INFO, error);
 		strncpy(head.status, "404 Not Found", BUF_VAL);
 		// Load error page instead
 		sprintf(buffert, "%s/%s", config->rootDir, "errpg/404.html");

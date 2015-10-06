@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
   		DIE_CLEANUP
     }
   }
-
+printf("Exiting..\n");
   // Clean up
   pthread_attr_destroy(&att);
   pthread_mutex_destroy(&thread_lock);
