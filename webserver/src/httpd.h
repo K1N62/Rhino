@@ -27,6 +27,7 @@
 #include <sys/sendfile.h>
 #include <sys/errno.h>
 #include <stdbool.h>
+#include <signal.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -43,3 +44,11 @@ pthread_mutex_t thread_lock;
 #include "log.h"
 #include "utility.h"
 #include "request.h"
+
+/* Catch Signal Handler functio */
+void signal_callback_handler(int signum){
+
+        printf("Caught signal SIGPIPE %d\n",signum);
+}
+
+signal(SIGPIPE, signal_callback_handler);
