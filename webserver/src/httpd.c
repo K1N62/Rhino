@@ -12,16 +12,19 @@
 
 #include "httpd.h"
 
+int execute;
+
 // signal Handler functions
-/*void sig_handle_pipe(int signum) {
-  // And ignore it
-  printf("Caught signal SIGPIPE %d\n",signum);
-}*/
 void sig_handle_int(int signum) {
-  // Close stuff and all that
+  printf("\nI'm dying..\n");
+  // Interrupt loop
+  execute = false;
 }
 
 int main(int argc, char* argv[]) {
+
+  // Set execution to true
+  execute = true;
 
   // Variable declarations
   int i, port, sd, sd_current, addrlen;
@@ -30,8 +33,11 @@ int main(int argc, char* argv[]) {
   pthread_t handler;
   pthread_attr_t att;
 
+  addrlen = sizeof(pin);
+
   // signal handlers
   signal(SIGPIPE, SIG_IGN);
+  signal(SIGINT, sig_handle_int);
 
   // Init thread lock
   pthread_mutex_init(&thread_lock, NULL);
@@ -164,11 +170,10 @@ int main(int argc, char* argv[]) {
   // Set system scope
   pthread_attr_setscope(&att, PTHREAD_SCOPE_SYSTEM);
   // Set RoundRobin scheduling
-  pthread_attr_setschedpolicy(&att, SCHED_RR); // Not supported in LINUX pthreads
+  pthread_attr_setschedpolicy(&att, SCHED_RR);
 
   // Start accepting requests
-  addrlen = sizeof(pin);
-  while(TRUE) {
+  while(execute) {
     // Accept a request from queue, blocking
     if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
   		sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
@@ -182,7 +187,7 @@ int main(int argc, char* argv[]) {
       // Shit happens, if server is out of memory just skip the request
       sprintf(error, "Unable to allocate memory skipping request, %s", strerror(errno));
       log_server(LOG_INFO, error);
-
+      close(sd_current);
     } else {
       // Set arguments
       args->sd      = sd_current;
@@ -200,10 +205,10 @@ int main(int argc, char* argv[]) {
 
 printf("Exiting..\n");
   // Clean up
-  pthread_attr_destroy(&att);
-  pthread_mutex_destroy(&thread_lock);
-  close(sd);
-  log_destroy();
+  pthread_attr_destroy(&att);printf("Exiting..\n");
+  pthread_mutex_destroy(&thread_lock);printf("Exiting..\n");
+  close(sd);printf("Exiting..\n");
+  log_destroy();printf("Exiting..\n");
 
   return 0;
 }
