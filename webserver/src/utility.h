@@ -20,6 +20,16 @@ void daemonfunc(const char *cmd);
  */
 bool startsWith(const char *pre, const char *str);
 
+/*
+  Get Extension
+
+  Checks the extension of a filename
+
+  @fspec      string, name of the file
+  @return     pointer to the position of the extension
+*/
+const char *getExt (const char *fspec);
+
 /*  Is Valid Ip Address
  *
  *  Checks if a string is a vlid ip address
@@ -48,7 +58,7 @@ bool hostnameToIp(char *hostname);
  * @size    size_t, size of both string with terminating null
  * return   char pointer, new array
  */
-char* ccat(char *a, char *b, size_t size);
+char *ccat(char *a, char *b, size_t size);
 
 /*  Print help
  *
@@ -56,3 +66,5 @@ char* ccat(char *a, char *b, size_t size);
  *  Print help to user
  */
 void printHelp(void);
+
+uid_t name_to_uid(char const *name);

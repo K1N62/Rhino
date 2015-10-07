@@ -1,22 +1,21 @@
 
 #include "log.h"
 
-void log_init(struct configuration *config)
+int log_init(struct configuration *config)
 {
   // Open access log
   if ((_log_access_fd = fopen(config->accLogPath, "a+")) == NULL) {
     printf("CRITICAL: Unable to open log %s, %s\n", config->accLogPath, strerror(errno));
-    exit(-1);
+    return -1;
   }
 
   // Open server log
   if ((_log_server_fd = fopen(config->srvLogPath, "a+")) == NULL) {
     printf("CRITICAL: Unable to open log %s, %s\n", config->srvLogPath, strerror(errno));
-    exit(-1);
+    return -1;
   }
 
-  // Get the lenght of doc root
-  _log_docRootLen = strlen(config->basedir);
+  return 0;
 }
 
 void log_destroy()
@@ -43,7 +42,7 @@ void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request,
   // Get the request
   // We only want the numbers
   strncpy(status, header->status, sizeof(status) - 1);
-  sprintf(req, "\"%s %s\" %s %d", request->method, request->uri + _log_docRootLen, status, header->size);
+  sprintf(req, "\"%s %s %s\" %s %d", request->method, request->uri, request->protocol, status, header->size);
 
   // Set the entry
   sprintf(entry, "%s - - [%s] %s\n", ip, date, req);

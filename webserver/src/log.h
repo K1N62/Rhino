@@ -17,9 +17,7 @@
 FILE *_log_access_fd,
      *_log_server_fd;
 
-int _log_docRootLen;
-
-void log_init(struct configuration *config);
+int log_init(struct configuration *config);
 
 void log_destroy();
 

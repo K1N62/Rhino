@@ -35,14 +35,13 @@ int main(int argc, char* argv[]) {
   char error[1024];
   pthread_t handler;
   pthread_attr_t att;
-  pid_t pid;
 
   // Set default handling method to thread
   handlingMethod = _THREAD;
 
   addrlen = sizeof(pin);
 
-  // signal handlers
+  // Signal handlers
   signal(SIGPIPE, SIG_IGN);
   signal(SIGINT, sig_handle_int);
 
@@ -58,6 +57,7 @@ int main(int argc, char* argv[]) {
   rootDir(argv[0]);
   parseConfig(&config);
 
+  // Check arguments
   if(argc > 1) {
     for(i = 1; i < argc; i++) {
       switch(argv[i][1]) {
@@ -140,14 +140,44 @@ int main(int argc, char* argv[]) {
   }
 
   // Init logfunctions
-  log_init(&config);
+  if (execute && log_init(&config) == -1) {
+    pthread_mutex_destroy(&thread_lock);
+    exit(-1);
+  }
+
+  // Check super user
+  if (getuid() != 0) {
+    perror("You have to be root to run this program");
+    exit(-1);
+  }
+
+  // Set root directory to document root
+  chdir(config.basedir);
+  if (chroot(config.basedir) == -1) {
+    sprintf(error, "Unable to change root directory, %s", strerror(errno));
+    log_server(LOG_ERROR, error);
+    execute = false;  // Terminate
+  }
+
+  // Drop root privileges
+  if (setgid(getgid()) == -1) {
+    sprintf(error, "Unable to change user, %s", strerror(errno));
+    log_server(LOG_ERROR, error);
+    execute = false;  // Terminate
+  }
+  if (setuid(getuid()) == -1) {
+    sprintf(error, "Unable to change user, %s", strerror(errno));
+    log_server(LOG_ERROR, error);
+    execute = false;  // Terminate
+  }
 
   // Create listening socket
   // Domain -> AF_INET = IPV4
   // Type -> SOCK_STREAM = TCP
   if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-  		printf("ERROR: Unable to open socket\n");
-  		exit(-1);
+      sprintf(error, "Unable to open socket, %s", strerror(errno));
+      log_server(LOG_ERROR, error);
+      execute = false;  // Terminate
   }
 
   // Zeroize sin
@@ -161,14 +191,16 @@ int main(int argc, char* argv[]) {
 
   // Try binding the socket
 	if(bind(sd, (struct sockaddr*) &sin, sizeof(sin)) == -1) {
-		printf("ERROR: Unable to bind socket\n");
-		exit(-1);
+    sprintf(error, "Unable to bind socket, %s", strerror(errno));
+    log_server(LOG_ERROR, error);
+    execute = false;  // Terminate
 	}
 
   // Start to listen for requests
   if(listen(sd, config.backlog) == -1) {
-		printf("ERROR: Too loud unable to listen\n");
-		exit(-1);
+    sprintf(error, "Too loud unable to listen, %s", strerror(errno));
+    log_server(LOG_ERROR, error);
+    execute = false;  // Terminate
 	}
 
   // If handling method is set to thread
@@ -188,7 +220,7 @@ int main(int argc, char* argv[]) {
 
       // Accept a request from queue, blocking
       if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
-  		  sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
+  		  sprintf(error, "Unable to accept request or it was interrupted, %s", strerror(errno));
         log_server(LOG_ERROR, error);
   		  close(sd_current);
         execute = false;    // Terminate
@@ -228,6 +260,9 @@ int main(int argc, char* argv[]) {
   		  close(sd_current);
         execute = false;    // Terminate
   	  } else {
+
+        pid_t pid;
+
         // Create child process
         if ((pid = fork()) == 0) {
 
