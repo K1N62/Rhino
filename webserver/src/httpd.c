@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
   // Variable declarations
   int i, port, sd_current, addrlen, handlingMethod;
   struct sockaddr_in sin, pin;
+  struct configuration config;
   char error[1024];
   pthread_t handler;
   pthread_attr_t att;
@@ -39,23 +40,24 @@ int main(int argc, char* argv[]) {
   // Set default handling method to thread
   handlingMethod = _THREAD;
 
+  // Get size of pin ..
   addrlen = sizeof(pin);
 
   // Signal handlers
   signal(SIGPIPE, SIG_IGN);
   signal(SIGINT, sig_handle_int);
 
-  // Init thread lock
-  pthread_mutex_init(&thread_lock, NULL);
-
   // Set default config
-  struct configuration config;
   setDefaultConfig(&config);
 
-  // Parse config file
+  // Set root dir to current running directory
   path_init(&config);
   rootDir(argv[0]);
-  parseConfig(&config);
+
+  // Parse config file
+  if (parseConfig(&config) == -1) {
+    exit(-1);
+  }
 
   // Check arguments
   if(argc > 1) {
@@ -140,8 +142,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Init logfunctions
-  if (execute && log_init(&config) == -1) {
-    pthread_mutex_destroy(&thread_lock);
+  if (log_init(&config) == -1) {
     exit(-1);
   }
 
@@ -202,6 +203,9 @@ int main(int argc, char* argv[]) {
     log_server(LOG_ERROR, error);
     execute = false;  // Terminate
 	}
+
+  // Init thread lock
+  pthread_mutex_init(&thread_lock, NULL);
 
   // If handling method is set to thread
   if(handlingMethod == _THREAD) {

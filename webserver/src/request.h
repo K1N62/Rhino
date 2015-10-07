@@ -9,7 +9,8 @@
 #include "httpd.h"
 
 #define BUF_REQ 1024
-#define DIE_CON fclose(reqFile); close(sd); free(args); pthread_exit(NULL);
+#define DIE_CON fclose(reqFile); close(sd); free(args); return NULL;
+//pthread_exit(NULL); libgcc required oO?
 
 #define _REQ_OK   "200" // OK
 #define _REQ_BAD  "400" // Bad Request

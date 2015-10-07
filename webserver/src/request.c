@@ -126,9 +126,9 @@ void *requestHandle(void *context)
 	struct _rqhd_args *args = (struct _rqhd_args*) context;
 	struct _rqhd_req req;
 	struct sockaddr_in pin = args->pin;
-	struct stat stat_buf;
+	struct stat stat_buf = {0};
 	int 	sd = args->sd;
-	FILE *reqFile;
+	FILE *reqFile = NULL;
 
 	// Init variables
 	head.protocol[0] 	= '\0';
@@ -217,6 +217,7 @@ void *requestHandle(void *context)
 		req.error = true;
 		// Load error page instead
 		strncpy(req.path, "/errpg/404.html", BUF_VAL);
+		realpath(req.path, buffert);
 	}
 	// If file exists and there was no error set status to 200
 	else if(!req.error) {
@@ -224,10 +225,17 @@ void *requestHandle(void *context)
 	}
 
 	// Open the file
-	reqFile = fopen(buffert, "r");
+	if ((reqFile = fopen(buffert, "r")) == NULL) {
+		// If we can't open the file send 500
+		req.error = true;
+		strncpy(head.status, "500 Internal Server Error", BUF_VAL);
+		strncpy(head.protocol, "HEAD", BUF_VAL);
+	}
 
 	// Get the file size
-	fstat(fileno(reqFile), &stat_buf);
+	if (reqFile != NULL) {
+		fstat(fileno(reqFile), &stat_buf);
+	}
 
 	// HEADER -------------------------------------
 	// Server name

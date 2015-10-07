@@ -2,28 +2,6 @@
 
 #include "config.h"
 
-/* Load config (Private)
- *
- * Loads a config file and returns it's filedescriptor
- *
- * @name      string, name of the file default to httpd.conf
- * @return    FILE*, filepointer to the config file
- */
-FILE* loadConfig(char *path)
-{
-  FILE *fd;
-
-  if ((fd = fopen(path, "r")) == NULL) {
-    // Unable to open config gile
-    perror("Failed to open config file");
-    exit(-1);
-  }
-  else
-  {
-    return fd;
-  }
-}
-
 /* Read value (Private)
  *
  * Reads a value from a config file line
@@ -68,9 +46,10 @@ int parseConfig(struct configuration *config)
   sprintf(buffert, "%s/%s", config->rootDir, config->configPath);
   realpath(buffert, realPathBuff);
 
-  configFile = loadConfig(realPathBuff);
-
-  printf("Parsing config file\n" );
+  if ((configFile = fopen(realPathBuff, "r")) == NULL) {
+    printf("CRITICAL: Unable to open config file %s, %s\n", config->accLogPath, strerror(errno));
+    return -1;
+  }
 
   while( getline(&line, &len, configFile) != EOF )
   {
