@@ -5,15 +5,27 @@
  * Copyright 2015
 
  TODO:
-  * Realpath så i kan förfråga valfri fil
   * Set base dir, anti haxxor
   * Root permission så vi kan binda portar under 1024
-  * Signal handler
+  * Signal handler, dosn't accually exits need SIGINT handler
 */
 
 #include "httpd.h"
 
+int execute;
+
+// signal Handler functions
+void sig_handle_int(int signum) {
+  printf("\nI'm dying..\n");
+  // Interrupt loop
+  execute = false;
+}
+
 int main(int argc, char* argv[]) {
+  // Set execution to true
+  execute = true;
+
+  // Variable declarations
   int i, port, sd, sd_current, addrlen, handlingMethod;
   struct sockaddr_in sin, pin;
   char error[1024];
@@ -23,6 +35,12 @@ int main(int argc, char* argv[]) {
 
   // Set default handling method to thread
   handlingMethod = _THREAD;
+
+  addrlen = sizeof(pin);
+
+  // signal handlers
+  signal(SIGPIPE, SIG_IGN);
+  signal(SIGINT, sig_handle_int);
 
   // Init thread lock
   pthread_mutex_init(&thread_lock, NULL);
@@ -177,6 +195,7 @@ int main(int argc, char* argv[]) {
         log_server(LOG_CRITICAL, error);
   		  DIE_CLEANUP
       }
+
       args->sd      = sd_current;
       args->pin     = pin;
       args->config  = &config;
@@ -227,6 +246,7 @@ int main(int argc, char* argv[]) {
         sprintf(error, "Unable to fork, %s", strerror(errno));
         log_server(LOG_ERROR, error);
         DIE_CLEANUP
+
       }
     }
   }
@@ -237,10 +257,12 @@ int main(int argc, char* argv[]) {
     log_server(LOG_ERROR, error);
   }
 
+printf("Exiting..\n");
   // Clean up
-  close(sd_current);
-  close(sd);
-  log_destroy();
+  pthread_attr_destroy(&att);printf("Exiting..\n");
+  pthread_mutex_destroy(&thread_lock);printf("Exiting..\n");
+  close(sd);printf("Exiting..\n");
+  log_destroy();printf("Exiting..\n");
 
   return 0;
 }

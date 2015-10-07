@@ -15,7 +15,7 @@
  */
 int sendLine(int sd, char *tmp)
 {
-	return send(sd, tmp, strlen(tmp), 0) == -1 ? -1 : 0;
+	return send(sd, tmp, strlen(tmp), MSG_NOSIGNAL) == -1 ? -1 : 0;
 }
 
 /* Send Header	(Private)
