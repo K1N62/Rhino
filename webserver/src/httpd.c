@@ -5,9 +5,11 @@
  * Copyright 2015
 
  TODO:
-  * Set base dir, anti haxxor
+  * chroot jail, anti haxxor
   * Root permission så vi kan binda portar under 1024
-  * Signal handler, dosn't accually exits need SIGINT handler
+  * Alt req method
+  * syslog
+  * Content-Type
 */
 
 #include "httpd.h"

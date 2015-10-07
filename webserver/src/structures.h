@@ -46,6 +46,7 @@
     char servername[BUF_CFG];
     char rootDir[BUF_CFG];
     char basedir[BUF_CFG];
+    char errpg[BUF_VAL];
     char accLogPath[BUF_CFG];
     char srvLogPath[BUF_CFG];
     char configPath[BUF_CFG];

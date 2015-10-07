@@ -213,15 +213,21 @@ void *requestHandle(void *context)
 	}
 	// Else set the requested file unless the request is bad
 	else if(!req.error) {
-		strncpy(req.uri, buffert, BUF_VAL);
+		//strncpy(req.uri, buffert, BUF_VAL);
 	}
 
 	// Set root directory to errpg if error, else document root
 	if (req.error){
 		sprintf(buffert, "%s/%s", config->rootDir, config->errpg);
-		chroot(buffert);
+		chdir(buffert);
+		if (chroot(buffert) == 0) {
+			perror("chroot");
+		}
 	} else {
-		chroot(config->basedir);
+		chdir(config->basedir);
+		if (chroot(config->basedir) == 0) {
+			perror("chroot");
+		}
 	}
 
 	// Check if file exists with realpath
@@ -230,15 +236,16 @@ void *requestHandle(void *context)
 		sprintf(error, "%s was not found, sending error page instead", buffert + strlen(config->basedir));
 		log_server(LOG_INFO, error);
 		strncpy(head.status, "404 Not Found", BUF_VAL);
+		req.error = true;
 		// Load error page instead
-		sprintf(buffert, "%s/%s", config->rootDir, "errpg/404.html");
-	}	else if(head.status[0] == '\0') {
+		sprintf(buffert, "%s/%s", config->rootDir, config->errpg);
+		chdir(buffert);
+		if (chroot(buffert) == 0) {
+			perror("chroot");
+		}
+		sprintf(buffert, "%s", "404.html");
+	}	else if(!req.error) {
 		strncpy(head.status, "200 OK", BUF_VAL);
-	}
-
-	// Check so the path is in Basedir
-	if (!startsWith(buffert, config->Basedir)) {
-
 	}
 
 	// Open the file
