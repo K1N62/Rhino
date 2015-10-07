@@ -5,20 +5,33 @@
  * Copyright 2015
 
  TODO:
-  * Realpath så i kan förfråga valfri fil
   * Set base dir, anti haxxor
   * Root permission så vi kan binda portar under 1024
-  * Signal handler
+  * Signal handler, dosn't accually exits need SIGINT handler
 */
 
 #include "httpd.h"
 
+// signal Handler functions
+/*void sig_handle_pipe(int signum) {
+  // And ignore it
+  printf("Caught signal SIGPIPE %d\n",signum);
+}*/
+void sig_handle_int(int signum) {
+  // Close stuff and all that
+}
+
 int main(int argc, char* argv[]) {
+
+  // Variable declarations
   int i, port, sd, sd_current, addrlen;
   struct sockaddr_in sin, pin;
   char error[1024];
   pthread_t handler;
   pthread_attr_t att;
+
+  // signal handlers
+  signal(SIGPIPE, SIG_IGN);
 
   // Init thread lock
   pthread_mutex_init(&thread_lock, NULL);
@@ -155,7 +168,7 @@ int main(int argc, char* argv[]) {
 
   // Start accepting requests
   addrlen = sizeof(pin);
-  while(true) {
+  while(TRUE) {
     // Accept a request from queue, blocking
     if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
   		sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
@@ -166,25 +179,29 @@ int main(int argc, char* argv[]) {
     // Create arguments struct
     struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
     if (args == NULL) {
-      sprintf(error, "Unable to allocate memory, %s", strerror(errno));
-      log_server(LOG_CRITICAL, error);
-  		DIE_CLEANUP
-    }
-    args->sd      = sd_current;
-    args->pin     = pin;
-    args->config  = &config;
+      // Shit happens, if server is out of memory just skip the request
+      sprintf(error, "Unable to allocate memory skipping request, %s", strerror(errno));
+      log_server(LOG_INFO, error);
 
-    if(pthread_create(&handler, &att, requestHandle, args) != 0) {
-      sprintf(error, "Unable to start thread, %s", strerror(errno));
-      log_server(LOG_CRITICAL, error);
-  		DIE_CLEANUP
+    } else {
+      // Set arguments
+      args->sd      = sd_current;
+      args->pin     = pin;
+      args->config  = &config;
+
+      // Create thread
+      if(pthread_create(&handler, &att, requestHandle, args) != 0) {
+        sprintf(error, "Unable to start thread, %s", strerror(errno));
+        log_server(LOG_CRITICAL, error);
+    		DIE_CLEANUP
+      }
     }
   }
+
 printf("Exiting..\n");
   // Clean up
   pthread_attr_destroy(&att);
   pthread_mutex_destroy(&thread_lock);
-  close(sd_current);
   close(sd);
   log_destroy();
 

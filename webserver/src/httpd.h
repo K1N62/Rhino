@@ -44,11 +44,3 @@ pthread_mutex_t thread_lock;
 #include "log.h"
 #include "utility.h"
 #include "request.h"
-
-/* Catch Signal Handler functio */
-void signal_callback_handler(int signum){
-
-        printf("Caught signal SIGPIPE %d\n",signum);
-}
-
-signal(SIGPIPE, signal_callback_handler);
