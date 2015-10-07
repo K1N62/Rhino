@@ -14,11 +14,15 @@
 #include "httpd.h"
 
 int main(int argc, char* argv[]) {
-  int i, port, sd, sd_current, addrlen;
+  int i, port, sd, sd_current, addrlen, handlingMethod;
   struct sockaddr_in sin, pin;
   char error[1024];
   pthread_t handler;
   pthread_attr_t att;
+  pid_t pid;
+
+  // Set default handling method to thread
+  handlingMethod = _THREAD;
 
   // Init thread lock
   pthread_mutex_init(&thread_lock, NULL);
@@ -86,17 +90,18 @@ int main(int argc, char* argv[]) {
             printHelp();
             return 0;
           }
-          if(argv[i][0] != '-')
-            printf("Starting: %s as selected request handling method\n", argv[i]);
-          else
-          {
+          if(strcmp(argv[i], "thread") == 0)
+            handlingMethod = _THREAD;
+          else if(strcmp(argv[i], "fork") == 0)
+            handlingMethod = _FORK;
+          else {
             printHelp();
             return 0;
           }
           break;
         case 'c':
           i++;
-          if(i >= argc){
+          if(i >= argc) {
             printHelp();
             return 0;
           }
@@ -144,46 +149,95 @@ int main(int argc, char* argv[]) {
 		exit(-1);
 	}
 
-  // Init thread attr
-  pthread_attr_init(&att);
-  // Set threads to detached state
-  pthread_attr_setdetachstate(&att, PTHREAD_CREATE_DETACHED);
-  // Set system scope
-  pthread_attr_setscope(&att, PTHREAD_SCOPE_SYSTEM);
-  // Set RoundRobin scheduling
-  pthread_attr_setschedpolicy(&att, SCHED_RR); // Not supported in LINUX pthreads
+  // If handling method is set to thread
+  if(handlingMethod == _THREAD) {
+    // Init thread attr
+    pthread_attr_init(&att);
+    // Set threads to detached state
+    pthread_attr_setdetachstate(&att, PTHREAD_CREATE_DETACHED);
+    // Set system scope
+    pthread_attr_setscope(&att, PTHREAD_SCOPE_SYSTEM);
+    // Set RoundRobin scheduling
+    pthread_attr_setschedpolicy(&att, SCHED_RR); // Not supported in LINUX pthreads
 
-  // Start accepting requests
-  addrlen = sizeof(pin);
-  while(true) {
-    // Accept a request from queue, blocking
-    if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
-  		sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
-      log_server(LOG_ERROR, error);
-  		DIE_CLEANUP
-  	}
+    // Start accepting requests
+    addrlen = sizeof(pin);
+    while(true) {
+      // Accept a request from queue, blocking
+      if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
+  		  sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
+        log_server(LOG_ERROR, error);
+  		  DIE_CLEANUP
+  	  }
 
-    // Create arguments struct
-    struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
-    if (args == NULL) {
-      sprintf(error, "Unable to allocate memory, %s", strerror(errno));
-      log_server(LOG_CRITICAL, error);
-  		DIE_CLEANUP
+      // Create arguments struct
+      struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
+      if (args == NULL) {
+        sprintf(error, "Unable to allocate memory, %s", strerror(errno));
+        log_server(LOG_CRITICAL, error);
+  		  DIE_CLEANUP
+      }
+      args->sd      = sd_current;
+      args->pin     = pin;
+      args->config  = &config;
+
+      if(pthread_create(&handler, &att, requestHandle, args) != 0) {
+        sprintf(error, "Unable to start thread, %s", strerror(errno));
+        log_server(LOG_CRITICAL, error);
+  		  DIE_CLEANUP
+      }
     }
-    args->sd      = sd_current;
-    args->pin     = pin;
-    args->config  = &config;
 
-    if(pthread_create(&handler, &att, requestHandle, args) != 0) {
-      sprintf(error, "Unable to start thread, %s", strerror(errno));
-      log_server(LOG_CRITICAL, error);
-  		DIE_CLEANUP
+    // Clean up
+    pthread_attr_destroy(&att);
+    pthread_mutex_destroy(&thread_lock);
+  }
+
+  // Else if handling method is set to fork
+  else if(handlingMethod == _FORK) {
+    // Start accepting requests
+    addrlen = sizeof(pin);
+    while(true) {
+      // Accept a request from queue, blocking
+      if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
+        sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
+        log_server(LOG_ERROR, error);
+        DIE_CLEANUP
+      }
+
+      // Create child process
+      if((pid = fork()) == 0) {
+        // Create arguments struct
+        struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
+        if (args == NULL) {
+          sprintf(error, "Unable to allocate memory, %s", strerror(errno));
+          log_server(LOG_CRITICAL, error);
+          DIE_CLEANUP
+        }
+        args->sd      = sd_current;
+        args->pin     = pin;
+        args->config  = &config;
+
+        requestHandle(args);
+      }
+      else if(pid > 1) {
+        // Close socket from parent
+      }
+      else {
+        sprintf(error, "Unable to fork, %s", strerror(errno));
+        log_server(LOG_ERROR, error);
+        DIE_CLEANUP
+      }
     }
   }
-printf("Exiting..\n");
+
+  // Else not a valid handlingMethod
+  else {
+    sprintf(error, "Internal error, no valid handling method is set");
+    log_server(LOG_ERROR, error);
+  }
+
   // Clean up
-  pthread_attr_destroy(&att);
-  pthread_mutex_destroy(&thread_lock);
   close(sd_current);
   close(sd);
   log_destroy();
