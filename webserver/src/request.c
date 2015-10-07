@@ -40,104 +40,76 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 
 	// Status
 	if (head->protocol != NULL && head->status != NULL){
-
 		// Build string
 		sprintf(tmp, "%s %s\r\n", head->protocol, head->status);
-
 		// Send it
 		if(sendLine(sd, tmp) == -1)
 			return -1;
-
 	} else {
 		log_server(LOG_INFO, "Status header was not sent! Was this intentional?");
 	}
-
 	// Server
 	if (head->server != NULL) {
-
 		// Build string
 		sprintf(tmp, "Server: %s\r\n", head->server);
-
 		// Send it
 		if(sendLine(sd, tmp) == -1)
 			return -1;
-
 	} else {
 		log_server(LOG_INFO, "Server header was not sent! Was this intentional?");
 	}
-
 	// Content-Length
 	if (head->size != 0) {
-
 		// Build string
 		sprintf(tmp, "Content-Length: %d\r\n", head->size);
-
 		// Send it
 		if(sendLine(sd, tmp) == -1)
 			return -1;
-
 	} else {
 		log_server(LOG_INFO, "Content-Length header was not sent! Was this intentional?");
 	}
-
 	// Content-Type
 	if (head->type != NULL) {
-
 		// Build string
 		sprintf(tmp, "Content-Type: %s\r\n", head->type);
-
 		// Send it
 		if(sendLine(sd, tmp) == -1)
 			return -1;
-
 	} else {
 		log_server(LOG_INFO, "Content-Type header was not sent! Was this intentional?");
 	}
-
 	// Cache-Control
 	if (head->cache != NULL) {
-
 		// Build string
 		sprintf(tmp, "Cache-Control: %s\r\n", head->cache);
-
 		// Send it
 		if(sendLine(sd, tmp) == -1)
 			return -1;
-
 	} else {
 		log_server(LOG_INFO, "Cache-Control header was not sent! Was this intentional?");
 	}
-
 	// Last-Modified
 	if (head->cache != NULL) {
-
 		// Build string
 		sprintf(tmp, "Last-Modified: %s\r\n", head->modified);
-
 		// Send it
 		if(sendLine(sd, tmp) == -1)
 			return -1;
-
 	} else {
 		log_server(LOG_INFO, "Last-Modified header was not sent! Was this intentional?");
 	}
-
 	// Date
 	// Get date
 	strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&t));
-
 	// Build string
 	sprintf(tmp, "Date: %s\r\n", date);
-
 	// Send it
 	if(sendLine(sd, tmp) == -1)
 		return -1;
-
 	// End of header
 	sprintf(tmp, "\r\n");
 	if(sendLine(sd, tmp) == -1)
 		return -1;
-
 	return 0;
 }
 
@@ -159,7 +131,7 @@ void *requestHandle(void *context)
 	int 	sd = args->sd;
 	FILE *reqFile;
 
-	// Init with zeroes
+	// Init variables
 	head.protocol[0] 	= '\0';
 	head.status[0] 		= '\0';
 	head.server[0] 		= '\0';
@@ -170,6 +142,7 @@ void *requestHandle(void *context)
 	req.method[0] 		= '\0';
 	req.uri[0] 				= '\0';
 	req.protocol[0] 	= '\0';
+	req.error					= false;
 
   // Recieve the data, thank you
   if (recv(sd, reqBuf, sizeof(reqBuf), 0) == -1) {
@@ -212,37 +185,43 @@ void *requestHandle(void *context)
 				} else {
 					// If no protocol set 400 Bad Request
 					strncpy(head.status, "400 Bad Request", BUF_VAL);
-					sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
-					strncpy(req.uri, buffert, BUF_VAL);
+					req.error = true;
+					strncpy(req.uri, "400.html", BUF_VAL);
 				}
 			} else {
 				// If no uri set 400 Bad Request
 				strncpy(head.status, "400 Bad Request", BUF_VAL);
-				sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
-				strncpy(req.uri, buffert, BUF_VAL);
+				req.error = true;
+				strncpy(req.uri, "400.html", BUF_VAL);
 			}
 		} else {
 			// If invalid method set 501 Not Implemented
 			strncpy(head.status, "501 Not Implemented", BUF_VAL);
-			sprintf(buffert, "%s/%s", config->rootDir, "errpg/501.html");
-			strncpy(req.uri, buffert, BUF_VAL);
+			req.error = true;
+			strncpy(req.uri, "501.html", BUF_VAL);
 		}
 	} else {
 		// If no method set 400 Bad Request
 		strncpy(head.status, "400 Bad Request", BUF_VAL);
-		sprintf(buffert, "%s/%s", config->rootDir, "errpg/400.html");
-		strncpy(req.uri, buffert, BUF_VAL);
+		req.error = true;
+		strncpy(req.uri, "400.html", BUF_VAL);
 	}
 
 	// If '/' was only character in uri set index
 	if (strlen(req.uri) == 1) {
-		sprintf(buffert, "%s%s", config->basedir, "/index.html");
+		strncpy(req.uri, "/index.html", BUF_VAL);
+	}
+	// Else set the requested file unless the request is bad
+	else if(!req.error) {
 		strncpy(req.uri, buffert, BUF_VAL);
 	}
-	// Else set the requested file unleess the request is bad
-	else if(head.status[0] == '\0') {
-		sprintf(buffert, "%s%s", config->basedir, req.uri);
-		strncpy(req.uri, buffert, BUF_VAL);
+
+	// Set root directory to errpg if error, else document root
+	if (req.error){
+		sprintf(buffert, "%s/%s", config->rootDir, config->errpg);
+		chroot(buffert);
+	} else {
+		chroot(config->basedir);
 	}
 
 	// Check if file exists with realpath
@@ -257,9 +236,13 @@ void *requestHandle(void *context)
 		strncpy(head.status, "200 OK", BUF_VAL);
 	}
 
+	// Check so the path is in Basedir
+	if (!startsWith(buffert, config->Basedir)) {
+
+	}
+
 	// Open the file
 	reqFile = fopen(buffert, "r");
-
 
 	// Get the file size
 	fstat(fileno(reqFile), &stat_buf);

@@ -38,6 +38,7 @@
     char uri[BUF_VAL];
     char protocol[BUF_VAL];
     struct _rqhd_req_head *head;
+    bool error;
   };
 
   /* Config structures */
