@@ -13,9 +13,6 @@
 #define _THREAD   0
 #define _FORK     1
 
-#define DIE_CLEANUP pthread_attr_destroy(&att); pthread_mutex_destroy(&thread_lock); close(sd_current); close(sd); log_destroy(); exit(-1);
-#define DIE_CLEANUP sig_handle_int(SIGINT); close(sd_current); exit(-1);
-
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <limits.h>
