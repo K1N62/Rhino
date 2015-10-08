@@ -9,15 +9,6 @@
 
 #pragma once
 
-struct configuration {
-  char *servername;
-  char *rootDir;
-  char *basedir;
-  char *accLogPath;
-  char *srvLogPath;
-  char *configPath;
-  int   listenPort;
-  int   backlog;
-};
+#include "httpd.h"
 
 void setDefaultConfig(struct configuration *config);

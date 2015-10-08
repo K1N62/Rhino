@@ -65,7 +65,7 @@ int parseConfig(struct configuration *config)
   char value[256] = {'\0'};
   size_t  lineIndex = 0, len = sizeof(value);
 
-  sprintf(buffert, "%s/%s", config->rootDir, CONFIG_PATH);
+  sprintf(buffert, "%s/%s", config->rootDir, config->configPath);
   realpath(buffert, realPathBuff);
 
   configFile = loadConfig(realPathBuff);
@@ -93,12 +93,12 @@ int parseConfig(struct configuration *config)
         // Check if value is an valid ip address
         if (isValidIpAddress(value))
         {
-          config->servername = value;
+          strncpy(config->servername,  value, BUF_CFG);
         }
         // Otherwise check if it's an valid domain name and resolve it
         else if(hostnameToIp(value))
         {
-          config->servername = value;
+          strncpy(config->servername,  value, BUF_CFG);
         }
         // Else this is not a valid config
         else
@@ -140,14 +140,60 @@ int parseConfig(struct configuration *config)
           printf("Invalid config, basedirectory: %s, %s\n", realPathBuff, strerror(errno));
           exit(-1);
         }
-        char *tmp = malloc(PATH_MAX); strcpy(tmp, realPathBuff);
+
         // Change basedirectory to the realpath
-        config->basedir = tmp;
+        strncpy(config->basedir, realPathBuff, BUF_CFG);
       }
-      else if (startsWith("Access_logpath", line + lineIndex))
+      else if (startsWith("Method", line + lineIndex))
       {
         // Move pass variable name
-        lineIndex += strlen("Access_logpath:");
+        lineIndex += strlen("Method:");
+
+        readValue(lineIndex, line, value, sizeof(value));
+
+        // If selected logging method is to a file
+        if((strcmp(value, "file")) == 0)
+        {
+          config->syslog = false;
+          
+          if (startsWith("Access_logpath", line + lineIndex))
+          {
+            // Move pass variable name
+            lineIndex += strlen("Access_logpath:");
+
+            readValue(lineIndex, line, value, sizeof(value));
+
+            // relative the root dir
+            sprintf(buffert, "%s/%s", config->rootDir, value);
+
+            // Get the realpath
+            realpath(buffert, realPathBuff);
+
+            // Change accLogPath to the realpath
+            strncpy(config->accLogPath, realPathBuff, BUF_CFG);
+          }
+          else if (startsWith("Server_logpath", line + lineIndex))
+          {
+            // Move pass variable name
+            lineIndex += strlen("Server_logpath:");
+
+            readValue(lineIndex, line, value, sizeof(value));
+
+            // relative the root dir
+            sprintf(buffert, "%s/%s", config->rootDir, value);
+
+            // Get the realpath
+            realpath(buffert, realPathBuff);
+
+            // Change srvLogPath to the realpath
+            strncpy(config->srvLogPath, realPathBuff, BUF_CFG);
+          }
+        }
+      }
+      else if (startsWith("Fifo_path", line + lineIndex))
+      {
+        // Move pass variable name
+        lineIndex += strlen("Fifo_path:");
 
         readValue(lineIndex, line, value, sizeof(value));
 
@@ -155,36 +201,10 @@ int parseConfig(struct configuration *config)
         sprintf(buffert, "%s/%s", config->rootDir, value);
 
         // Get the realpath
-        if(realpath(buffert, realPathBuff) == NULL){
-          printf("Invalid config, access logpath: %s, %s\n", realPathBuff, strerror(errno));
-          exit(-1);
-        }
-        char tmp[PATH_MAX]; strcpy(tmp, realPathBuff);
-        // Change accLogPath to the realpath
-        config->accLogPath = tmp;
-      }
-      else if (startsWith("Server_logpath", line + lineIndex))
-      {
-        // Move pass variable name
-        lineIndex += strlen("Server_logpath:");
+        realpath(buffert, realPathBuff);
 
-        readValue(lineIndex, line, value, sizeof(value));
-
-        // relative the root dir
-        sprintf(buffert, "%s/%s", config->rootDir, value);
-
-        // Get the realpath
-        if(realpath(buffert, realPathBuff) == NULL){
-          printf("Invalid config, server logpath: %s, %s\n", realPathBuff, strerror(errno));
-          exit(-1);
-        }
-        char tmp[PATH_MAX]; strcpy(tmp, realPathBuff);
         // Change srvLogPath to the realpath
-        config->srvLogPath = tmp;
-      }
-      else
-      {
-        printf("Invalid configuration");
+        strncpy(config->fifoPath, realPathBuff, BUF_CFG);
       }
     }
   }

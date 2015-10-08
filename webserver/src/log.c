@@ -4,32 +4,23 @@
 void log_init(struct configuration *config)
 {
   // Open access log
-  char buffert[128];
-  FILE *tmpFile;
-  if(realpath(config->accLogPath, buffert) == NULL){
-    if((tmpFile = fopen(buffert, "a+")) == NULL){
-      printf("CRITICAL: Unable to locate logfile at: %s, %s\n", buffert, strerror(errno));
-      exit(-1);
-    }
-    else
-      fclose(tmpFile);
-  }
-
-  if ((_log_access_fd = fopen(buffert, "a+")) == NULL) {
-    printf("CRITICAL: Unable to open log %s, %s\n", buffert, strerror(errno));
-    exit(-1);
-  }
-
-  if(realpath(config->srvLogPath, buffert) == NULL){
-    printf("CRITICAL: Unable to locate logfile at: %s, %s\n", buffert, strerror(errno));
+  if ((_log_access_fd = fopen(config->accLogPath, "a+")) == NULL) {
+    printf("CRITICAL: Unable to open log %s, %s\n", config->accLogPath, strerror(errno));
     exit(-1);
   }
 
   // Open server log
-  if ((_log_server_fd = fopen(buffert, "a+")) == NULL) {
-    printf("CRITICAL: Unable to open log %s, %s\n", buffert, strerror(errno));
+  if ((_log_server_fd = fopen(config->srvLogPath, "a+")) == NULL) {
+    printf("CRITICAL: Unable to open log %s, %s\n", config->srvLogPath, strerror(errno));
     exit(-1);
   }
+
+  // Set logToSyslog if syslog is set
+  if(config->syslog)
+    logToSyslog = true;
+
+  // Get the lenght of doc root
+  _log_docRootLen = strlen(config->basedir);
 }
 
 void log_destroy()
@@ -38,25 +29,43 @@ void log_destroy()
   fclose(_log_server_fd);
 }
 
-void log_access(const struct sockaddr_in *addr, char *request, char *statusCode, int bytes)
+void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header)
 {
   time_t t = time(NULL);
-  char entry[1024];
-  char date[64];
-  char ip[INET_ADDRSTRLEN];
+  char  entry[4096],
+        date[64],
+        ip[INET_ADDRSTRLEN],
+        status[4],
+        req[1024]; // Safe from overflow, each request value can be maximum BUF_VAL (256)
 
   // Get the date
   strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&t));
 
+  // Get the IP
   inet_ntop(AF_INET, &(addr->sin_addr), ip, INET_ADDRSTRLEN);
 
+  // Get the request
+  // We only want the numbers
+  strncpy(status, header->status, sizeof(status) - 1);
+  sprintf(req, "\"%s %s\" %s %d", request->method, request->uri + _log_docRootLen, status, header->size);
+
   // Set the entry
-  sprintf(entry, "%s - - [%s] \"%s\" %s %d\n", ip, date, request, statusCode, bytes);
+  sprintf(entry, "%s - - [%s] %s\n", ip, date, req);
+
 
   // Get mutex and print to log
   pthread_mutex_lock(&thread_lock);
-  fputs(entry, _log_access_fd);
-  fflush(_log_access_fd);
+
+  // Logs to syslog if set
+  if(logToSyslog) {
+    openlog("accessLog", LOG_NDELAY, LOG_DAEMON | LOG_USER);
+    syslog(LOG_INFO, entry);
+    closelog();
+  }
+  else {
+    fputs(entry, _log_access_fd);
+    fflush(_log_access_fd);
+  }
   pthread_mutex_unlock(&thread_lock);
 
 }
@@ -73,18 +82,27 @@ void log_server(int error, char *errorMessage)
 
   switch(error){
     case(0):
-      logLevel = "[CRITICAL]:";
+      logLevel = "[EMERGENCY]:";
       break;
     case(1):
-      logLevel = "[ERROR]:";
+      logLevel = "[ALERT]:";
       break;
     case(2):
-      logLevel = "[WARNING]:";
+      logLevel = "[CRITICAL]:";
       break;
     case(3):
-      logLevel = "[INFORMATION]:";
+      logLevel = "[ERROR]:";
       break;
     case(4):
+      logLevel = "[WARNING]:";
+      break;
+    case(5):
+      logLevel = "[NOTICE]:";
+      break;
+    case(6):
+      logLevel = "[INFORMATION]:";
+      break;
+    case(7):
       logLevel = "[DEBUG]:";
       break;
   }
@@ -94,8 +112,17 @@ void log_server(int error, char *errorMessage)
 
   // Get mutex and print to log
   pthread_mutex_lock(&thread_lock);
-  fputs(entry, _log_server_fd);
-  fflush(_log_server_fd);
+
+  // Logs to syslog if set
+  if(logToSyslog) {
+    openlog("serverLog", LOG_NDELAY, LOG_DAEMON | LOG_USER);
+    syslog(error, entry);
+    closelog();
+  }
+  else {
+    fputs(entry, _log_server_fd);
+    fflush(_log_server_fd);
+  }
   pthread_mutex_unlock(&thread_lock);
 
 }
