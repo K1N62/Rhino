@@ -46,6 +46,7 @@ int main(int argc, char* argv[]) {
   // Signal handlers
   signal(SIGPIPE, SIG_IGN);
   signal(SIGINT, sig_handle_int);
+  signal(SIGABRT, sig_handle_int);
 
   // Set default config
   setDefaultConfig(&config);
@@ -224,9 +225,11 @@ int main(int argc, char* argv[]) {
 
       // Accept a request from queue, blocking
       if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
-  		  sprintf(error, "Unable to accept request or it was interrupted, %s", strerror(errno));
-        log_server(LOG_ERROR, error);
-  		  close(sd_current);
+        if (execute) {
+          sprintf(error, "Unable to accept request, %s", strerror(errno));
+          log_server(LOG_ERROR, error);
+        }
+    		close(sd_current);
         execute = false;    // Terminate
   	  } else {
 
