@@ -50,6 +50,8 @@
     char accLogPath[BUF_CFG];
     char srvLogPath[BUF_CFG];
     char configPath[BUF_CFG];
+    char fifoPath[BUF_CFG];
     int  listenPort;
     int  backlog;
+    bool syslog;
   };

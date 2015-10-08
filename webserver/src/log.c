@@ -25,7 +25,7 @@ void log_destroy()
   fclose(_log_server_fd);
 }
 
-void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header)
+void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header, bool syslogBool)
 {
   time_t t = time(NULL);
   char  entry[4096],
@@ -48,15 +48,25 @@ void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request,
   // Set the entry
   sprintf(entry, "%s - - [%s] %s\n", ip, date, req);
 
+
   // Get mutex and print to log
   pthread_mutex_lock(&thread_lock);
-  fputs(entry, _log_access_fd);
-  fflush(_log_access_fd);
+
+  // Logs to syslog if set
+  if(syslogBool) {
+    openlog("webserverLog", LOG_PERROR, LOG_DAEMON | LOG_USER);
+    syslog(LOG_INFO, entry);
+    closelog();
+  }
+  else {
+    fputs(entry, _log_access_fd);
+    fflush(_log_access_fd);
+  }
   pthread_mutex_unlock(&thread_lock);
 
 }
 
-void log_server(int error, char *errorMessage)
+void log_server(int error, char *errorMessage, bool syslogBool)
 {
   time_t t = time(NULL);
   char entry[265];
@@ -68,18 +78,27 @@ void log_server(int error, char *errorMessage)
 
   switch(error){
     case(0):
-      logLevel = "[CRITICAL]:";
+      logLevel = "[EMERGENCY]:";
       break;
     case(1):
-      logLevel = "[ERROR]:";
+      logLevel = "[ALERT]:";
       break;
     case(2):
-      logLevel = "[WARNING]:";
+      logLevel = "[CRITICAL]:";
       break;
     case(3):
-      logLevel = "[INFORMATION]:";
+      logLevel = "[ERROR]:";
       break;
     case(4):
+      logLevel = "[WARNING]:";
+      break;
+    case(5):
+      logLevel = "[NOTICE]:";
+      break;
+    case(6):
+      logLevel = "[INFORMATION]:";
+      break;
+    case(7):
       logLevel = "[DEBUG]:";
       break;
   }
@@ -89,8 +108,17 @@ void log_server(int error, char *errorMessage)
 
   // Get mutex and print to log
   pthread_mutex_lock(&thread_lock);
-  fputs(entry, _log_server_fd);
-  fflush(_log_server_fd);
+
+  // Logs to syslog if set
+  if(syslogBool) {
+    openlog("webserverLog", LOG_PERROR, LOG_DAEMON | LOG_USER);
+    syslog(error, entry);
+    closelog();
+  }
+  else {
+    fputs(entry, _log_server_fd);
+    fflush(_log_server_fd);
+  }
   pthread_mutex_unlock(&thread_lock);
 
 }

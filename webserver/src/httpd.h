@@ -11,7 +11,9 @@
 #define _HTTP_VER "1.0"
 
 #define _THREAD   0
-#define _FORK     1
+#define _PREFORK  1
+
+#define _NUMBER_OF_CHILDREN 15
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -31,6 +33,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
