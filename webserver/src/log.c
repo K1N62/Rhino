@@ -15,6 +15,10 @@ void log_init(struct configuration *config)
     exit(-1);
   }
 
+  // Set logToSyslog if syslog is set
+  if(config->syslog)
+    logToSyslog = true;
+
   // Get the lenght of doc root
   _log_docRootLen = strlen(config->basedir);
 }
@@ -25,7 +29,7 @@ void log_destroy()
   fclose(_log_server_fd);
 }
 
-void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header, bool syslogBool)
+void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header)
 {
   time_t t = time(NULL);
   char  entry[4096],
@@ -53,8 +57,8 @@ void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request,
   pthread_mutex_lock(&thread_lock);
 
   // Logs to syslog if set
-  if(syslogBool) {
-    openlog("webserverLog", LOG_PERROR, LOG_DAEMON | LOG_USER);
+  if(logToSyslog) {
+    openlog("accessLog", LOG_NDELAY, LOG_DAEMON | LOG_USER);
     syslog(LOG_INFO, entry);
     closelog();
   }
@@ -66,7 +70,7 @@ void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request,
 
 }
 
-void log_server(int error, char *errorMessage, bool syslogBool)
+void log_server(int error, char *errorMessage)
 {
   time_t t = time(NULL);
   char entry[265];
@@ -110,8 +114,8 @@ void log_server(int error, char *errorMessage, bool syslogBool)
   pthread_mutex_lock(&thread_lock);
 
   // Logs to syslog if set
-  if(syslogBool) {
-    openlog("webserverLog", LOG_PERROR, LOG_DAEMON | LOG_USER);
+  if(logToSyslog) {
+    openlog("serverLog", LOG_NDELAY, LOG_DAEMON | LOG_USER);
     syslog(error, entry);
     closelog();
   }

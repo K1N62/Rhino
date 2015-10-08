@@ -19,10 +19,12 @@ FILE *_log_access_fd,
 
 int _log_docRootLen;
 
+bool logToSyslog;
+
 void log_init(struct configuration *config);
 
 void log_destroy();
 
-void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header, bool syslogBool);
+void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header);
 
-void log_server(int error, char *errorMessage, bool syslogBool);
+void log_server(int error, char *errorMessage);

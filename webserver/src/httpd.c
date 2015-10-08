@@ -34,7 +34,6 @@ int main(int argc, char* argv[]) {
   int pidOfChild[_NUMBER_OF_CHILDREN];
   struct sockaddr_in sin, pin;
   char error[1024];
-  bool daemon = false;
   pthread_t handler;
   pthread_attr_t att;
   pid_t pid;
@@ -92,7 +91,6 @@ int main(int argc, char* argv[]) {
           // Start daemon if set
           printf("Starting daemon...\n");
           daemonfunc("daemon");
-          daemon = true;
           break;
         case 'l':
           i++;
@@ -191,7 +189,7 @@ int main(int argc, char* argv[]) {
       // Accept a request from queue, blocking
       if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
   		  sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
-        log_server(LOG_ERR, error, config.syslog);
+        log_server(LOG_ERR, error);
   		  close(sd_current);
         execute = false;    // Terminate
   	  } else {
@@ -200,18 +198,19 @@ int main(int argc, char* argv[]) {
         struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
         if (args == NULL) {
           sprintf(error, "Unable to allocate memory, %s", strerror(errno));
-          log_server(LOG_CRIT, error, config.syslog);
+          log_server(LOG_CRIT, error);
       		close(sd_current);
         } else {
           // Set arguments
           args->sd      = sd_current;
           args->pin     = pin;
-          args->config  = &config;
+          args->config  = &config;    }
+
 
           // Create thread
           if(pthread_create(&handler, &att, requestHandle, args) != 0) {
             sprintf(error, "Unable to start thread, %s", strerror(errno));
-            log_server(LOG_CRIT, error, config.syslog);
+            log_server(LOG_CRIT, error);
             close(sd_current);
             execute = false;    // Terminate
           }
@@ -227,11 +226,9 @@ int main(int argc, char* argv[]) {
     // Try opening the pipe
     if((pipe = open(config.fifoPath, O_WRONLY)) == -1) {
       sprintf(error, "Unable to open FIFO-pipe, %s", strerror(errno));
-      log_server(LOG_CRIT, error, config.syslog);
+      log_server(LOG_CRIT, error);
       execute = false;    // Terminate
     }
-    else
-      close(pipe);
 
     // Create all child processes
     for(i = 0; i < _NUMBER_OF_CHILDREN && execute == true; i++) {
@@ -242,7 +239,7 @@ int main(int argc, char* argv[]) {
         pidOfChild[i] = pid;
       else {
         sprintf(error, "Unable to fork, %s", strerror(errno));
-        log_server(LOG_CRIT, error, config.syslog);
+        log_server(LOG_CRIT, error);
         execute = false;    // Terminate
       }
     }
@@ -251,7 +248,7 @@ int main(int argc, char* argv[]) {
       // Accept a request from queue, blocking
       if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
   		  sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
-        log_server(LOG_ERR, error, config.syslog);
+        log_server(LOG_ERR, error);
   		  close(sd_current);
         execute = false;    // Terminate
   	  } else {
@@ -261,7 +258,7 @@ int main(int argc, char* argv[]) {
           struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
           if (args == NULL) {
             sprintf(error, "Unable to allocate memory, %s", strerror(errno));
-            log_server(LOG_CRIT, error, config.syslog);
+            log_server(LOG_CRIT, error);
             close(sd_current);
           } else {
             // Set arguments
@@ -274,17 +271,17 @@ int main(int argc, char* argv[]) {
           }
           // Close socket from parent
           sprintf(error, "Unable to fork, %s", strerror(errno));
-          log_server(LOG_CRIT, error, config.syslog);
+          log_server(LOG_CRIT, error);
           close(sd_current);
           execute = false;    // Terminate
         }
       }
     }
-  
+
   // Else not a valid handling method
   else {
     sprintf(error, "Internal error, no valid handling method is set");
-    log_server(LOG_ERR, error, config.syslog);
+    log_server(LOG_ERR, error);
   }
 
 printf("Exiting..\n");

@@ -26,7 +26,7 @@ int sendLine(int sd, char *tmp)
  * @rqhd			struct, see header file for information
  * @return		int, -1 if error
  */
-int sendHeader(int sd, const struct _rqhd_header *head, bool syslog)
+int sendHeader(int sd, const struct _rqhd_header *head)
 {
 	char tmp[128];
 	char date[64];
@@ -46,7 +46,7 @@ int sendHeader(int sd, const struct _rqhd_header *head, bool syslog)
 		if(sendLine(sd, tmp) == -1)
 			return -1;
 	} else {
-		log_server(LOG_INFO, "Status header was not sent! Was this intentional?", syslog);
+		log_server(LOG_INFO, "Status header was not sent! Was this intentional?");
 	}
 	// Server
 	if (head->server != NULL) {
@@ -56,7 +56,7 @@ int sendHeader(int sd, const struct _rqhd_header *head, bool syslog)
 		if(sendLine(sd, tmp) == -1)
 			return -1;
 	} else {
-		log_server(LOG_INFO, "Server header was not sent! Was this intentional?", syslog);
+		log_server(LOG_INFO, "Server header was not sent! Was this intentional?");
 	}
 	// Content-Length
 	if (head->size != 0) {
@@ -66,7 +66,7 @@ int sendHeader(int sd, const struct _rqhd_header *head, bool syslog)
 		if(sendLine(sd, tmp) == -1)
 			return -1;
 	} else {
-		log_server(LOG_INFO, "Content-Length header was not sent! Was this intentional?", syslog);
+		log_server(LOG_INFO, "Content-Length header was not sent! Was this intentional?");
 	}
 	// Content-Type
 	if (head->type != NULL) {
@@ -76,7 +76,7 @@ int sendHeader(int sd, const struct _rqhd_header *head, bool syslog)
 		if(sendLine(sd, tmp) == -1)
 			return -1;
 	} else {
-		log_server(LOG_INFO, "Content-Type header was not sent! Was this intentional?", syslog);
+		log_server(LOG_INFO, "Content-Type header was not sent! Was this intentional?");
 	}
 	// Cache-Control
 	if (head->cache != NULL) {
@@ -86,7 +86,7 @@ int sendHeader(int sd, const struct _rqhd_header *head, bool syslog)
 		if(sendLine(sd, tmp) == -1)
 			return -1;
 	} else {
-		log_server(LOG_INFO, "Cache-Control header was not sent! Was this intentional?", syslog);
+		log_server(LOG_INFO, "Cache-Control header was not sent! Was this intentional?");
 	}
 	// Last-Modified
 	if (head->cache != NULL) {
@@ -96,7 +96,7 @@ int sendHeader(int sd, const struct _rqhd_header *head, bool syslog)
 		if(sendLine(sd, tmp) == -1)
 			return -1;
 	} else {
-		log_server(LOG_INFO, "Last-Modified header was not sent! Was this intentional?", syslog);
+		log_server(LOG_INFO, "Last-Modified header was not sent! Was this intentional?");
 	}
 	// Date
 	// Get date
@@ -147,7 +147,7 @@ void *requestHandle(void *context)
   // Recieve the data, thank you
   if (recv(sd, reqBuf, sizeof(reqBuf), 0) == -1) {
 		sprintf(error, "Unable to recieve request, %s", strerror(errno));
-		log_server(LOG_ERR, error, config->syslog);
+		log_server(LOG_ERR, error);
 		// Cleanup
     close(sd);
 		free(args);
@@ -234,7 +234,7 @@ void *requestHandle(void *context)
 	if (realpath(req.uri, buffert) == NULL) {
 		// If file does not exists
 		sprintf(error, "%s was not found, sending error page instead", buffert + strlen(config->basedir));
-		log_server(LOG_INFO, error, config->syslog);
+		log_server(LOG_INFO, error);
 		strncpy(head.status, "404 Not Found", BUF_VAL);
 		req.error = true;
 		// Load error page instead
@@ -270,9 +270,9 @@ void *requestHandle(void *context)
 	strncpy(head.modified, date, BUF_VAL);
 
 	// Send header
-	if (sendHeader(sd, &head, config->syslog) == -1) {
+	if (sendHeader(sd, &head) == -1) {
 		sprintf(error, "Unable to send header, %s", strerror(errno));
-		log_server(LOG_ERR, error, config->syslog);
+		log_server(LOG_ERR, error);
 		DIE_CON
 	}
 	// -------------------------------------------------------------------------
@@ -281,13 +281,13 @@ void *requestHandle(void *context)
 	if (strcmp(req.method, "GET") == 0) {
 		if (sendfile(sd, fileno(reqFile), NULL, stat_buf.st_size) == -1)	{
       sprintf(error, "Unable to send requested file, %s", strerror(errno));
-      log_server(LOG_ERR, error, config->syslog);
+      log_server(LOG_ERR, error);
 			DIE_CON
 		}
 	}
 
 	// Log
-	log_access(&pin, &req, &head, config->syslog);
+	log_access(&pin, &req, &head);
 
 	// Cleanup
 	fclose(reqFile);
