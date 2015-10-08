@@ -7,12 +7,6 @@ void daemonfunc(const char *cmd)
     pid_t pid;
     struct sigaction    sa;
 
-    // Get maximum number of file descriptors.
-   if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-        perror(cmd);
-        exit(-1);
-    }
-
     // Become a session leader to lose controlling TTY.
     if ((pid = fork()) < 0) {
         perror(cmd);

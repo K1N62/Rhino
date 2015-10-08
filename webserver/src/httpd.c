@@ -5,11 +5,8 @@
  * Copyright 2015
 
  TODO:
-  * chroot jail, anti haxxor
-  * Root permission så vi kan binda portar under 1024
   * Alt req method
   * syslog
-  * Content-Type
 */
 
 #include "httpd.h"
@@ -18,7 +15,7 @@ int execute, sd;
 
 // signal Handler functions
 void sig_handle_int(int signum) {
-  printf("\nI'm dying..\n");
+  printf("I'm dying..\n");
   // Interrupt loop
   execute = false;
   // Shutdown open sockets (Wake up)
@@ -26,8 +23,6 @@ void sig_handle_int(int signum) {
 }
 
 int main(int argc, char* argv[]) {
-  // Set execution to true
-  execute = true;
 
   // Variable declarations
   int i, port, sd_current, addrlen, handlingMethod;
@@ -36,6 +31,12 @@ int main(int argc, char* argv[]) {
   char error[1024];
   pthread_t handler;
   pthread_attr_t att;
+  
+  // Set execution to true
+  execute = true;
+
+  // Clear file creation mask.
+  umask(0);
 
   // Set default handling method to thread
   handlingMethod = _THREAD;
@@ -305,12 +306,12 @@ int main(int argc, char* argv[]) {
     log_server(LOG_ERROR, error);
   }
 
-printf("Exiting..\n");
   // Clean up
   pthread_attr_destroy(&att);
   pthread_mutex_destroy(&thread_lock);
   close(sd);
   log_destroy();
+  printf("Cleanup complete, no one will know I was here.\n");
 
   return 0;
 }
