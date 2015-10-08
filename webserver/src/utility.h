@@ -48,23 +48,9 @@ bool isValidIpAddress(char *ipAddress);
  */
 bool hostnameToIp(char *hostname);
 
-//char* getIPStr(const struct sockaddr *sa, char *s, size_t maxlen);
-
-/*  Concatenate (AKA SeaCat)
- *
- *  Concatenates two char arrays
- * @a       char array, array a
- * @b       char array, array b
- * @size    size_t, size of both string with terminating null
- * return   char pointer, new array
- */
-char *ccat(char *a, char *b, size_t size);
-
 /*  Print help
  *
  *
  *  Print help to user
  */
 void printHelp(void);
-
-uid_t name_to_uid(char const *name);

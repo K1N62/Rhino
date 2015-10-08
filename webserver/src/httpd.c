@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
           if(strcmp(argv[i], "thread") == 0)
             handlingMethod = _THREAD;
           else if(strcmp(argv[i], "fork") == 0)
-            handlingMethod = _FORK;
+            handlingMethod = _PREFORK;
           else {
             printHelp();
             return 0;
@@ -257,13 +257,15 @@ int main(int argc, char* argv[]) {
     }
   }
   // Else if handling method is set to fork
-  else if(handlingMethod == _FORK) {
+  else if(handlingMethod == _PREFORK) {
     // Start accepting requests
     while(execute) {
       // Accept a request from queue, blocking
       if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
-  		  sprintf(error, "Unable to accept request, OS won't share, %s", strerror(errno));
-        log_server(LOG_ERROR, error);
+        if (execute) {
+          sprintf(error, "Unable to accept request, %s", strerror(errno));
+          log_server(LOG_ERROR, error);
+        }
   		  close(sd_current);
         execute = false;    // Terminate
   	  } else {
@@ -288,9 +290,7 @@ int main(int argc, char* argv[]) {
             // Call request handler
             requestHandle(args);
           }
-        } else if (pid > 1) {
-          // Close socket from parent
-        } else {
+        } else if (pid < 0) {
           sprintf(error, "Unable to fork, %s", strerror(errno));
           log_server(LOG_CRITICAL, error);
           close(sd_current);

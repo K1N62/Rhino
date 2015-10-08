@@ -122,13 +122,13 @@ void *requestHandle(void *context)
 				error[1024],
 				*req_line,
 				*req_token;
-	struct _rqhd_header head;
-	struct _rqhd_args *args = (struct _rqhd_args*) context;
-	struct _rqhd_req req;
-	struct sockaddr_in pin = args->pin;
-	struct stat stat_buf = {0};
-	int 	sd = args->sd;
-	FILE *reqFile = NULL;
+	struct 	_rqhd_header head;
+	struct 	_rqhd_args *args = (struct _rqhd_args*) context;
+	struct 	_rqhd_req req;
+	struct 	sockaddr_in pin = args->pin;
+	struct 	stat stat_buf = {0};
+	int			sd = args->sd;
+	FILE 		*reqFile = NULL;
 
 	// Init variables
 	head.protocol[0] 	= '\0';
@@ -247,11 +247,13 @@ void *requestHandle(void *context)
 		strncpy(head.type, "image/png", BUF_VAL);
 	} else if (strcmp(getExt(req.uri), ".jpg") == 0) {
 		strncpy(head.type, "image/jpg", BUF_VAL);
+	} else if (strcmp(getExt(req.uri), ".gif") == 0) {
+		strncpy(head.type, "image/gif", BUF_VAL);
 	} else if (strcmp(getExt(req.uri), ".css") == 0) {
 		strncpy(head.type, "text/css", BUF_VAL);
 	} else if (strcmp(getExt(req.uri), ".js") == 0) {
 		strncpy(head.type, "application/javascript", BUF_VAL);
-	} else {
+	} else if (strcmp(getExt(req.uri), ".html") == 0) {
 		strncpy(head.type, "text/html", BUF_VAL);
 	}
 	// Size
@@ -264,8 +266,8 @@ void *requestHandle(void *context)
 
 	// Send header
 	if (sendHeader(sd, &head) == -1) {
-		sprintf(error, "Unable to send header, %s", strerror(errno));
-		log_server(LOG_ERROR, error);
+		sprintf(error, "Unable to send header, %s. Aborting", strerror(errno));
+		log_server(LOG_WARN, error);
 		DIE_CON
 	}
 	// -------------------------------------------------------------------------
@@ -273,8 +275,8 @@ void *requestHandle(void *context)
 	// Send the requested file if method is GET
 	if (strcmp(req.method, "GET") == 0) {
 		if (sendfile(sd, fileno(reqFile), NULL, stat_buf.st_size) == -1)	{
-      sprintf(error, "Unable to send requested file, %s", strerror(errno));
-      log_server(LOG_ERROR, error);
+      sprintf(error, "Unable to send requested file, %s. Aborting", strerror(errno));
+      log_server(LOG_WARN, error);
 			DIE_CON
 		}
 	}

@@ -5,23 +5,27 @@ void daemonfunc(const char *cmd)
 {
     int i;
     pid_t pid;
-    struct rlimit       rl;
     struct sigaction    sa;
 
     // Get maximum number of file descriptors.
    if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         perror(cmd);
-        exit(1);
+        exit(-1);
     }
 
     // Become a session leader to lose controlling TTY.
     if ((pid = fork()) < 0) {
         perror(cmd);
-        exit(1);
+        exit(-1);
     }
-    else if (pid != 0) /* parent */
+    else if (pid != 0) // Exit parent
         exit(0);
 
+    // Set session id so this process is session leader (Untach controlling terminal CTTY)
+    if (setsid() < 0) {
+      perror("Can't set sid");
+      exit(-1);
+    }
 
     // Ensure future opens won't allocate controlling TTYs.
     sa.sa_handler = SIG_IGN;
@@ -29,37 +33,32 @@ void daemonfunc(const char *cmd)
     sa.sa_flags = 0;
     if (sigaction(SIGHUP, &sa, NULL) < 0) {
         perror("Can't ignore SIGHUP");
-        exit(1);
+        exit(-1);
     }
+    //signal(SIGHUP, SIG_IGN); ?
+
+    // Fork again to get rid of session leader
     if ((pid = fork()) < 0){
         perror("Can't fork");
-        exit(1);
+        exit(-1);
     }
-    else if (pid != 0) /* parent */
+    else if (pid != 0) // Exit parent
         exit(0);
 
     // Clear file creation mask.
     umask(0);
 
-    // Set session id so this process is session leader
-    setsid();
-
     // Change the current working directory to the root so
     // we won't prevent file systems from being unmounted.
     if (chdir("/") < 0){
         perror("Can't change to /");
-        exit(1);
+        exit(-1);
     }
 
-    // Close all open file descriptors.
-   if (rl.rlim_max == RLIM_INFINITY)
-        rl.rlim_max = 1024;
-    for (i = 0; i < rl.rlim_max; i++)
+    // Close all open file descriptors that's inherited from the parent
+    // Including stdin, stdout, stderr
+    for (i = 0; i < sysconf(_SC_OPEN_MAX); i++)
         close(i);
-
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
 }
 
 bool startsWith(const char *pre, const char *str)
@@ -101,14 +100,6 @@ bool hostnameToIp(char *hostname)
     return false;
 }
 
-char *ccat(char *a, char *b, size_t size)
-{
-  char *tmp = malloc(size);
-  strncpy(tmp, a, size);
-  strcat(tmp, b);
-  return tmp;
-}
-
 void printHelp(void)
 {
   printf("\n -h \t Print help text \n -p \t port, Select port to listen to \n -d \t Run webserver as a daemon \n -l \t logfile, Log to logfile \n    \t If not specified, logging will be output to syslog \n -s \t |thread|, Select request handling method \n -c \t absolute path to config, If not set process will try finding it\n\n");
@@ -119,19 +110,4 @@ const char *getExt (const char *fspec) {
     if (e == NULL)
         e = "";
     return e;
-}
-
-uid_t name_to_uid(char const *name)
-{
-  if (!name)
-    return -1;
-  long const buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
-  if (buflen == -1)
-    return -1;
-  char buf[buflen];
-  struct passwd pwbuf, *pwbufp;
-  if (0 != getpwnam_r(name, &pwbuf, buf, buflen, &pwbufp)
-      || !pwbufp)
-    return -1;
-  return pwbufp->pw_uid;
 }
