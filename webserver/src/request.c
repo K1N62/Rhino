@@ -115,6 +115,7 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 
 void *requestHandle(void *context)
 {
+
 	// Get the arguments
 	char 	buffert[PATH_MAX],
 				reqBuf[BUF_REQ],
@@ -129,7 +130,7 @@ void *requestHandle(void *context)
 	struct 	stat stat_buf = {0};
 	int			sd = args->sd;
 	FILE 		*reqFile = NULL;
-
+	
 	// Init variables
 	head.protocol[0] 	= '\0';
 	head.status[0] 		= '\0';
@@ -146,7 +147,7 @@ void *requestHandle(void *context)
   // Recieve the data, thank you
   if (recv(sd, reqBuf, sizeof(reqBuf), 0) == -1) {
 		sprintf(error, "Unable to recieve request, %s", strerror(errno));
-		log_server(LOG_ERROR, error);
+		log_server(LOG_ERR, error);
 		// Cleanup
     close(sd);
 		free(args);
@@ -267,7 +268,7 @@ void *requestHandle(void *context)
 	// Send header
 	if (sendHeader(sd, &head) == -1) {
 		sprintf(error, "Unable to send header, %s. Aborting", strerror(errno));
-		log_server(LOG_WARN, error);
+		log_server(LOG_WARNING, error);
 		DIE_CON
 	}
 	// -------------------------------------------------------------------------
@@ -276,7 +277,7 @@ void *requestHandle(void *context)
 	if (strcmp(req.method, "GET") == 0) {
 		if (sendfile(sd, fileno(reqFile), NULL, stat_buf.st_size) == -1)	{
       sprintf(error, "Unable to send requested file, %s. Aborting", strerror(errno));
-      log_server(LOG_WARN, error);
+      log_server(LOG_WARNING, error);
 			DIE_CON
 		}
 	}

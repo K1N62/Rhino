@@ -123,26 +123,56 @@ int parseConfig(struct configuration *config)
         // Change basedirectory to the realpath
         strncpy(config->basedir, realPathBuff, BUF_CFG);
       }
-      else if (startsWith("Access_logpath", line + lineIndex))
+      else if (startsWith("Method", line + lineIndex))
       {
         // Move pass variable name
-        lineIndex += strlen("Access_logpath:");
+        lineIndex += strlen("Method:");
 
         readValue(lineIndex, line, value, sizeof(value));
 
-        // relative the root dir
-        sprintf(buffert, "%s/%s", config->rootDir, value);
+        // If selected logging method is to a file
+        if((strcmp(value, "file")) == 0)
+        {
+          config->syslog = false;
+          
+          if (startsWith("Access_logpath", line + lineIndex))
+          {
+            // Move pass variable name
+            lineIndex += strlen("Access_logpath:");
 
-        // Get the realpath
-        realpath(buffert, realPathBuff);
+            readValue(lineIndex, line, value, sizeof(value));
 
-        // Change accLogPath to the realpath
-        strncpy(config->accLogPath, realPathBuff, BUF_CFG);
+            // relative the root dir
+            sprintf(buffert, "%s/%s", config->rootDir, value);
+
+            // Get the realpath
+            realpath(buffert, realPathBuff);
+
+            // Change accLogPath to the realpath
+            strncpy(config->accLogPath, realPathBuff, BUF_CFG);
+          }
+          else if (startsWith("Server_logpath", line + lineIndex))
+          {
+            // Move pass variable name
+            lineIndex += strlen("Server_logpath:");
+
+            readValue(lineIndex, line, value, sizeof(value));
+
+            // relative the root dir
+            sprintf(buffert, "%s/%s", config->rootDir, value);
+
+            // Get the realpath
+            realpath(buffert, realPathBuff);
+
+            // Change srvLogPath to the realpath
+            strncpy(config->srvLogPath, realPathBuff, BUF_CFG);
+          }
+        }
       }
-      else if (startsWith("Server_logpath", line + lineIndex))
+      else if (startsWith("Fifo_path", line + lineIndex))
       {
         // Move pass variable name
-        lineIndex += strlen("Server_logpath:");
+        lineIndex += strlen("Fifo_path:");
 
         readValue(lineIndex, line, value, sizeof(value));
 
@@ -153,7 +183,7 @@ int parseConfig(struct configuration *config)
         realpath(buffert, realPathBuff);
 
         // Change srvLogPath to the realpath
-        strncpy(config->srvLogPath, realPathBuff, BUF_CFG);
+        strncpy(config->fifoPath, realPathBuff, BUF_CFG);
       }
     }
   }

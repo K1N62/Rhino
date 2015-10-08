@@ -25,13 +25,13 @@ void sig_handle_int(int signum) {
 int main(int argc, char* argv[]) {
 
   // Variable declarations
-  int i, port, sd_current, addrlen, handlingMethod;
+  int i, port, sd_current, addrlen, handlingMethod, pipe;
   struct sockaddr_in sin, pin;
   struct configuration config;
   char error[1024];
   pthread_t handler;
   pthread_attr_t att;
-  
+
   // Set execution to true
   execute = true;
 
@@ -94,7 +94,6 @@ int main(int argc, char* argv[]) {
           // Start daemon if set
           printf("Starting daemon...\n");
           daemonfunc("daemon");
-
           break;
         case 'l':
           i++;
@@ -118,7 +117,7 @@ int main(int argc, char* argv[]) {
           }
           if(strcmp(argv[i], "thread") == 0)
             handlingMethod = _THREAD;
-          else if(strcmp(argv[i], "fork") == 0)
+          else if(strcmp(argv[i], "prefork") == 0)
             handlingMethod = _PREFORK;
           else {
             printHelp();
@@ -148,6 +147,18 @@ int main(int argc, char* argv[]) {
     exit(-1);
   }
 
+  // Create fifo if prefork is set
+  if (handlingMethod == _PREFORK) {
+      // Create the named fifo pipe
+      mkfifo(config.fifoPath, 0666);
+      // Try opening the pipe
+      if((pipe = open(config.fifoPath, O_RDWR)) == -1) {
+        sprintf(error, "Unable to open FIFO-pipe, %s", strerror(errno));
+        log_server(LOG_CRIT, error);
+        execute = false;    // Terminate
+      }
+  }
+
   // Check super user
   if (getuid() != 0) {
     perror("You have to be root to run this program");
@@ -158,19 +169,19 @@ int main(int argc, char* argv[]) {
   chdir(config.basedir);
   if (chroot(config.basedir) == -1) {
     sprintf(error, "Unable to change root directory, %s", strerror(errno));
-    log_server(LOG_ERROR, error);
+    log_server(LOG_ERR, error);
     execute = false;  // Terminate
   }
 
   // Drop root privileges
   if (setgid(getgid()) == -1) {
     sprintf(error, "Unable to change user, %s", strerror(errno));
-    log_server(LOG_ERROR, error);
+    log_server(LOG_ERR, error);
     execute = false;  // Terminate
   }
   if (setuid(getuid()) == -1) {
     sprintf(error, "Unable to change user, %s", strerror(errno));
-    log_server(LOG_ERROR, error);
+    log_server(LOG_ERR, error);
     execute = false;  // Terminate
   }
 
@@ -179,7 +190,7 @@ int main(int argc, char* argv[]) {
   // Type -> SOCK_STREAM = TCP
   if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
       sprintf(error, "Unable to open socket, %s", strerror(errno));
-      log_server(LOG_ERROR, error);
+      log_server(LOG_ERR, error);
       execute = false;  // Terminate
   }
 
@@ -195,14 +206,14 @@ int main(int argc, char* argv[]) {
   // Try binding the socket
 	if(bind(sd, (struct sockaddr*) &sin, sizeof(sin)) == -1) {
     sprintf(error, "Unable to bind socket, %s", strerror(errno));
-    log_server(LOG_ERROR, error);
+    log_server(LOG_ERR, error);
     execute = false;  // Terminate
 	}
 
   // Start to listen for requests
   if(listen(sd, config.backlog) == -1) {
     sprintf(error, "Too loud unable to listen, %s", strerror(errno));
-    log_server(LOG_ERROR, error);
+    log_server(LOG_ERR, error);
     execute = false;  // Terminate
 	}
 
@@ -228,7 +239,7 @@ int main(int argc, char* argv[]) {
       if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
         if (execute) {
           sprintf(error, "Unable to accept request, %s", strerror(errno));
-          log_server(LOG_ERROR, error);
+          log_server(LOG_ERR, error);
         }
     		close(sd_current);
         execute = false;    // Terminate
@@ -238,72 +249,99 @@ int main(int argc, char* argv[]) {
         struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
         if (args == NULL) {
           sprintf(error, "Unable to allocate memory, %s", strerror(errno));
-          log_server(LOG_CRITICAL, error);
+          log_server(LOG_CRIT, error);
       		close(sd_current);
         } else {
           // Set arguments
           args->sd      = sd_current;
           args->pin     = pin;
           args->config  = &config;
+        }
 
           // Create thread
           if(pthread_create(&handler, &att, requestHandle, args) != 0) {
             sprintf(error, "Unable to start thread, %s", strerror(errno));
-            log_server(LOG_CRITICAL, error);
+            log_server(LOG_CRIT, error);
             close(sd_current);
             execute = false;    // Terminate
           }
         }
       }
     }
-  }
   // Else if handling method is set to fork
   else if(handlingMethod == _PREFORK) {
-    // Start accepting requests
-    while(execute) {
-      // Accept a request from queue, blocking
-      if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
-        if (execute) {
-          sprintf(error, "Unable to accept request, %s", strerror(errno));
-          log_server(LOG_ERROR, error);
+
+    pid_t pid;
+
+      // Create all child processes
+      for(i = 0; i < _NUMBER_OF_CHILDREN; i++) {
+        pid = fork();
+        if (pid == 0) {
+            i = _NUMBER_OF_CHILDREN; // Get out of loop
         }
-  		  close(sd_current);
-        execute = false;    // Terminate
-  	  } else {
+        else if (pid < 0) {
+          sprintf(error, "Unable to fork, %s", strerror(errno));
+          log_server(LOG_CRIT, error);
+          execute = false;    // Terminate
+        }
+      }
 
-        pid_t pid;
+      if (pid > 0) {
+      // PARENT -----------------------------------------------
+      // Start accepting requests
+      while (execute) {
+        // Accept a request from queue, blocking
+        if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
+          if (execute) {
+            sprintf(error, "Unable to accept request, %s", strerror(errno));
+            log_server(LOG_ERR, error);
+          }
+    		  close(sd_current);
+          execute = false;    // Terminate
+    	  } else {
+              // Write sd_current to fifo
+              printf("%d SENDING DELIVERY\n", getpid());
+              if (write(pipe, &sd_current, sizeof(int) == -1)) {
+                perror("write pipe, error");
+              }
+            }
+          }
 
-        // Create child process
-        if ((pid = fork()) == 0) {
-
+        int status;
+        wait(&status);
+        close(pipe);
+        unlink(config.fifoPath);
+      } else {
+        // CHILD -----------------------------------------------
+        int sd_get;
+        while (execute) {
+          printf("%d WAITING\n", getpid());
+          if (read(pipe, &sd_get, sizeof(int) == -1)) {
+            perror("read pipe, error");
+          }
+          printf("%d ACCEPTED DELIVERY: %d\n", getpid(), sd_get);
           // Shit happens, if server is out of memory just skip the request
           struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
           if (args == NULL) {
             sprintf(error, "Unable to allocate memory, %s", strerror(errno));
-            log_server(LOG_CRITICAL, error);
-            close(sd_current);
+            log_server(LOG_CRIT, error);
+            close(sd_get);
           } else {
             // Set arguments
-            args->sd      = sd_current;
+            args->sd      = sd_get;
             args->pin     = pin;
             args->config  = &config;
-
-            // Call request handler
-            requestHandle(args);
           }
-        } else if (pid < 0) {
-          sprintf(error, "Unable to fork, %s", strerror(errno));
-          log_server(LOG_CRITICAL, error);
-          close(sd_current);
-          execute = false;    // Terminate
+          requestHandle(args);
         }
+        close(pipe);
       }
-    }
   }
+
   // Else not a valid handling method
   else {
-    sprintf(error, "Internal error, no valid handling method is set");
-    log_server(LOG_ERROR, error);
+    sprintf(error, "Invalid handling method is set");
+    log_server(LOG_ERR, error);
   }
 
   // Clean up

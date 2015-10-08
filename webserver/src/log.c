@@ -15,6 +15,10 @@ int log_init(struct configuration *config)
     return -1;
   }
 
+  // Set logToSyslog if syslog is set
+  if(config->syslog)
+    logToSyslog = true;
+
   return 0;
 }
 
@@ -44,14 +48,21 @@ void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request,
   strncpy(status, header->status, sizeof(status) - 1);
   sprintf(req, "\"%s %s %s\" %s %d", request->method, request->uri, request->protocol, status, header->size);
 
-  // Set the entry
-  sprintf(entry, "%s - - [%s] %s\n", ip, date, req);
-
-  // Get mutex and print to log
-  pthread_mutex_lock(&thread_lock);
-  fputs(entry, _log_access_fd);
-  fflush(_log_access_fd);
-  pthread_mutex_unlock(&thread_lock);
+  // Logs to syslog if set
+  if(logToSyslog) {
+    openlog("accessLog", LOG_NDELAY, LOG_DAEMON | LOG_USER);
+    syslog(LOG_INFO, "%s - - [%s] %s\n", ip, date, req);
+    closelog();
+  }
+  else {
+    // Set the entry
+    sprintf(entry, "%s - - [%s] %s\n", ip, date, req);
+    // Get mutex and print to log
+    pthread_mutex_lock(&thread_lock);
+    fputs(entry, _log_access_fd);
+    fflush(_log_access_fd);
+    pthread_mutex_unlock(&thread_lock);
+  }
 
 }
 
@@ -67,29 +78,45 @@ void log_server(int error, char *errorMessage)
 
   switch(error){
     case(0):
-      logLevel = "[CRITICAL]:";
+      logLevel = "[EMERGENCY]:";
       break;
     case(1):
-      logLevel = "[ERROR]:";
+      logLevel = "[ALERT]:";
       break;
     case(2):
-      logLevel = "[WARNING]:";
+      logLevel = "[CRITICAL]:";
       break;
     case(3):
-      logLevel = "[INFORMATION]:";
+      logLevel = "[ERROR]:";
       break;
     case(4):
+      logLevel = "[WARNING]:";
+      break;
+    case(5):
+      logLevel = "[NOTICE]:";
+      break;
+    case(6):
+      logLevel = "[INFORMATION]:";
+      break;
+    case(7):
       logLevel = "[DEBUG]:";
       break;
   }
 
-  // Set the entry
-  sprintf(entry, "[%s] \"%s %s\"\n", date, logLevel, errorMessage);
-
-  // Get mutex and print to log
-  pthread_mutex_lock(&thread_lock);
-  fputs(entry, _log_server_fd);
-  fflush(_log_server_fd);
-  pthread_mutex_unlock(&thread_lock);
+  // Logs to syslog if set
+  if(logToSyslog) {
+    openlog("serverLog", LOG_NDELAY, LOG_DAEMON | LOG_USER);
+    syslog(error, "[%s] \"%s %s\"\n", date, logLevel, errorMessage);
+    closelog();
+  }
+  else {
+    // Set the entry
+    sprintf(entry, "[%s] \"%s %s\"\n", date, logLevel, errorMessage);
+    // Get mutex and print to log
+    pthread_mutex_lock(&thread_lock);
+    fputs(entry, _log_server_fd);
+    fflush(_log_server_fd);
+    pthread_mutex_unlock(&thread_lock);
+  }
 
 }

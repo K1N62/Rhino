@@ -8,16 +8,12 @@
 
 #include "httpd.h"
 
-#define LOG_CRITICAL  0
-#define LOG_ERROR     1
-#define LOG_WARN      2
-#define LOG_INFO      3
-#define LOG_DEBUG     4
-
 FILE *_log_access_fd,
      *_log_server_fd;
 
 int log_init(struct configuration *config);
+
+bool logToSyslog;
 
 void log_destroy();
 

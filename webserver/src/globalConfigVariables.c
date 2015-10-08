@@ -10,4 +10,6 @@ void setDefaultConfig(struct configuration *config)
   strcpy(config->accLogPath,  "log/access.log");
   strcpy(config->srvLogPath,  "log/server.log");
   strcpy(config->configPath,  "config/httpd.conf");
+  strcpy(config->fifoPath,    "fifo");
+  config->syslog              = true;
 }
