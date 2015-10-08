@@ -1,4 +1,3 @@
-
 /* Path handler header file
  *
  * Declares functions that will be used for handling paths
@@ -8,9 +7,12 @@
 
 #include "httpd.h"
 
-struct pathHandler {
-  char *path;
-  char *filename;
-};
+#define PATH_BIN "/bin/httpd"
 
-void setRootDir(struct configuration *config);
+struct configuration *_path_config;
+
+void path_init(struct configuration *config);
+
+void rootDir(char *path);
+
+char* getRelRoot(char *path);
