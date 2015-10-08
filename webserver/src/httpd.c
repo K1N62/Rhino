@@ -1,12 +1,16 @@
 
-/* Webserver
- *
- * Authors, Jim Ahlstrand & Lukas Landenstad
- * Copyright 2015
+/*
+           _____   _   _   ___   _   _    ____
+          |  _ \\ | | | | |_ _| | \ | |  / _ \\
+          | |_) | | |_| |  | |  |  \| | | | | |
+          |  _ <  |  _  |  | |  | |\  | | |_| |
+          |_| \_\ |_| |_| |___| |_| \_| \\___/
 
- TODO:
-  * Alt req method
-  * syslog
+             a brilliant HTTP/1.0 Webserver
+
+  Authors, Jim Ahlstrand & Lukas Landenstad
+  Copyright 2015
+
 */
 
 #include "httpd.h"
@@ -15,7 +19,7 @@ int execute, sd;
 
 // signal Handler functions
 void sig_handle_int(int signum) {
-  printf("I'm dying..\n");
+  printf("%d: I'm dying..\n", getpid());
   // Interrupt loop
   execute = false;
   // Shutdown open sockets (Wake up)
@@ -295,44 +299,59 @@ int main(int argc, char* argv[]) {
           if (execute) {
             sprintf(error, "Unable to accept request, %s", strerror(errno));
             log_server(LOG_ERR, error);
+          } else {
+            // Send die status
+            sd_current = -1;
+            printf("%d SENDING DIE\n", getpid());
+            for(i = 0; i < _NUMBER_OF_CHILDREN; i++) {
+              if (write(pipe, &sd_current, sizeof(int)) == -1) {
+                perror("write pipe, error");
+              }
+            }
           }
     		  close(sd_current);
           execute = false;    // Terminate
     	  } else {
+
               // Write sd_current to fifo
               printf("%d SENDING DELIVERY\n", getpid());
-              if (write(pipe, &sd_current, sizeof(int) == -1)) {
+              if (write(pipe, &sd_current, sizeof(int)) == -1) {
                 perror("write pipe, error");
               }
             }
           }
 
-        int status;
-        wait(&status);
+        int status; // Don'r realy care about this one
+        for (i = 0; i < _NUMBER_OF_CHILDREN; i++) // We wait for all of them childs, not just one
+          wait(&status);
         close(pipe);
         unlink(config.fifoPath);
       } else {
         // CHILD -----------------------------------------------
-        int sd_get;
         while (execute) {
+          int sd_get;
+
           printf("%d WAITING\n", getpid());
-          if (read(pipe, &sd_get, sizeof(int) == -1)) {
+          if (read(pipe, &sd_get, sizeof(int)) == -1) {
             perror("read pipe, error");
           }
           printf("%d ACCEPTED DELIVERY: %d\n", getpid(), sd_get);
-          // Shit happens, if server is out of memory just skip the request
-          struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
-          if (args == NULL) {
-            sprintf(error, "Unable to allocate memory, %s", strerror(errno));
-            log_server(LOG_CRIT, error);
-            close(sd_get);
-          } else {
-            // Set arguments
-            args->sd      = sd_get;
-            args->pin     = pin;
-            args->config  = &config;
+
+          if (sd_get >= 0) {
+            // Shit happens, if server is out of memory just skip the request
+            struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
+            if (args == NULL) {
+              sprintf(error, "Unable to allocate memory, %s", strerror(errno));
+              log_server(LOG_CRIT, error);
+              close(sd_get);
+            } else {
+              // Set arguments
+              args->sd      = sd_get;
+              args->pin     = pin;
+              args->config  = &config;
+            }
+            requestHandle(args);
           }
-          requestHandle(args);
         }
         close(pipe);
       }

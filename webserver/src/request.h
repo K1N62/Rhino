@@ -9,7 +9,13 @@
 #include "httpd.h"
 
 #define BUF_REQ 1024
-#define DIE_CON fclose(reqFile); close(sd); free(args); return NULL;
+#define DIE_CON if (reqFile != NULL) \
+                  fclose(reqFile); \
+                if (sd >= 0) \
+                  close(sd); \
+                if (args != NULL) \
+                  free(args); \
+                return NULL;
 //pthread_exit(NULL); libgcc required?
 
 #define _REQ_OK   "200" // OK
@@ -23,7 +29,7 @@
  *
  * Handles http requests
  *
- * @context     void, pointer to a rqhdArgs struct
+ * @context     void, pointer to a dynamic allocated rqhdArgs struct
  * @return      void
  */
 void *requestHandle(void *context);

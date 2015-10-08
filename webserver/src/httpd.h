@@ -12,7 +12,7 @@
 
 #define _THREAD   0
 #define _PREFORK  1
-#define _NUMBER_OF_CHILDREN 15
+#define _NUMBER_OF_CHILDREN 5
 
 #include <arpa/inet.h>
 #include <fcntl.h>

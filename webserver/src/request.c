@@ -130,7 +130,7 @@ void *requestHandle(void *context)
 	struct 	stat stat_buf = {0};
 	int			sd = args->sd;
 	FILE 		*reqFile = NULL;
-	
+
 	// Init variables
 	head.protocol[0] 	= '\0';
 	head.status[0] 		= '\0';
@@ -264,7 +264,7 @@ void *requestHandle(void *context)
 	// Last-Modified
 	strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&stat_buf.st_ctime));
 	strncpy(head.modified, date, BUF_VAL);
-
+printf("YES WE GOT THIS FAR\n");
 	// Send header
 	if (sendHeader(sd, &head) == -1) {
 		sprintf(error, "Unable to send header, %s. Aborting", strerror(errno));
