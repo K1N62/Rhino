@@ -151,7 +151,7 @@ void *requestHandle(void *context)
 		// Cleanup
     close(sd);
 		free(args);
-		pthread_exit(NULL);
+		return NULL;
   }
 
 	// PARSE REQUEST -------------------------------------
@@ -264,7 +264,7 @@ void *requestHandle(void *context)
 	// Last-Modified
 	strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&stat_buf.st_ctime));
 	strncpy(head.modified, date, BUF_VAL);
-printf("YES WE GOT THIS FAR\n");
+	
 	// Send header
 	if (sendHeader(sd, &head) == -1) {
 		sprintf(error, "Unable to send header, %s. Aborting", strerror(errno));

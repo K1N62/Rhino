@@ -11,8 +11,7 @@
 #define _HTTP_VER "1.0"
 
 #define _THREAD   0
-#define _PREFORK  1
-#define _NUMBER_OF_CHILDREN 5
+#define _FORK     1
 
 #include <arpa/inet.h>
 #include <fcntl.h>

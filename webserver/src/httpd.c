@@ -1,16 +1,19 @@
 
 /*
-           _____   _   _   ___   _   _    ____
-          |  _ \\ | | | | |_ _| | \ | |  / _ \\
-          | |_) | | |_| |  | |  |  \| | | | | |
-          |  _ <  |  _  |  | |  | |\  | | |_| |
-          |_| \_\ |_| |_| |___| |_| \_| \\___/
+         _____   _   _   ___   _   _    ____
+        |  _ \\ | | | | |_ _| | \ | |  / _ \\
+        | |_) | | |_| |  | |  |  \| | | | | |
+        |  _ <  |  _  |  | |  | |\  | | |_| |
+        |_| \_\ |_| |_| |___| |_| \_| \\___/
 
-             a brilliant HTTP/1.0 Webserver
+         a brilliant HTTP/1.0 Webserver
 
   Authors, Jim Ahlstrand & Lukas Landenstad
   Copyright 2015
 
+TODO:
+  Fix deamon with fork
+  Broken pipe
 */
 
 #include "httpd.h"
@@ -29,12 +32,14 @@ void sig_handle_int(int signum) {
 int main(int argc, char* argv[]) {
 
   // Variable declarations
-  int i, port, sd_current, addrlen, handlingMethod, pipe;
+  int i, port, sd_current, addrlen, handlingMethod, fifo, setval, max_fd;
   struct sockaddr_in sin, pin;
   struct configuration config;
   char error[1024];
   pthread_t handler;
   pthread_attr_t att;
+  pid_t pid;
+  fd_set rfds;
 
   // Set execution to true
   execute = true;
@@ -71,13 +76,13 @@ int main(int argc, char* argv[]) {
       switch(argv[i][1]) {
         case 'h':
           printHelp();
-          return 0;
+          return 3;
           break;
         case 'p':
           i++;
           if(i >= argc) {
             printHelp();
-            return 0;
+            return 3;
           }
           if(argv[i][0] != '-') {
             if((port = atoi(argv[i])) != 0 && port < 65536) {
@@ -86,12 +91,12 @@ int main(int argc, char* argv[]) {
             }
             else {
               printHelp();
-              return 0;
+              return 3;
             }
           }
           else {
             printHelp();
-            return 0;
+            return 3;
           }
           break;
         case 'd':
@@ -103,43 +108,43 @@ int main(int argc, char* argv[]) {
           i++;
           if(i >= argc) {
             printHelp();
-            return 0;
+            return 3;
           }
           if(argv[i][0] != '-') {
             strcpy(config.accLogPath, argv[i]);
           }
           else {
             printHelp();
-            return 0;
+            return 3;
           }
           break;
         case 's':
           i++;
           if(i >= argc) {
             printHelp();
-            return 0;
+            return 3;
           }
           if(strcmp(argv[i], "thread") == 0)
             handlingMethod = _THREAD;
-          else if(strcmp(argv[i], "prefork") == 0)
-            handlingMethod = _PREFORK;
+          else if(strcmp(argv[i], "fork") == 0)
+            handlingMethod = _FORK;
           else {
             printHelp();
-            return 0;
+            return 3;
           }
           break;
         case 'c':
           i++;
           if(i >= argc) {
             printHelp();
-            return 0;
+            return 3;
           }
           if(argv[i][0] != '-') {
             strcpy(config.configPath, argv[i]);
           }
           else {
             printHelp();
-            return 0;
+            return 3;
           }
           break;
       }
@@ -152,11 +157,11 @@ int main(int argc, char* argv[]) {
   }
 
   // Create fifo if prefork is set
-  if (handlingMethod == _PREFORK) {
+  if (handlingMethod == _FORK) {
       // Create the named fifo pipe
       mkfifo(config.fifoPath, 0666);
       // Try opening the pipe
-      if((pipe = open(config.fifoPath, O_RDWR)) == -1) {
+      if((fifo = open(config.fifoPath, O_RDWR)) == -1) {
         sprintf(error, "Unable to open FIFO-pipe, %s", strerror(errno));
         log_server(LOG_CRIT, error);
         execute = false;    // Terminate
@@ -271,90 +276,84 @@ int main(int argc, char* argv[]) {
           }
         }
       }
+
+      // Destroy attributes
+      pthread_attr_destroy(&att);
     }
   // Else if handling method is set to fork
-  else if(handlingMethod == _PREFORK) {
+  else if(handlingMethod == _FORK) {
 
-    pid_t pid;
+    FD_SET(sd, &rfds);
+    FD_SET(fifo, &rfds);
+    max_fd = sd;
+    if (fifo > sd)
+      max_fd = fifo;
 
-      // Create all child processes
-      for(i = 0; i < _NUMBER_OF_CHILDREN; i++) {
-        pid = fork();
-        if (pid == 0) {
-            i = _NUMBER_OF_CHILDREN; // Get out of loop
-        }
-        else if (pid < 0) {
-          sprintf(error, "Unable to fork, %s", strerror(errno));
-          log_server(LOG_CRIT, error);
-          execute = false;    // Terminate
-        }
-      }
+    // Start accepting requests
+    while(execute) {
 
-      if (pid > 0) {
-      // PARENT -----------------------------------------------
-      // Start accepting requests
-      while (execute) {
-        // Accept a request from queue, blocking
+      // Accept request or handle child
+      setval = select(max_fd + 1, &rfds, NULL, NULL, NULL);
+
+      if (setval == 1) {
+        // Accept a request from queue
         if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
           if (execute) {
             sprintf(error, "Unable to accept request, %s", strerror(errno));
             log_server(LOG_ERR, error);
-          } else {
-            // Send die status
-            sd_current = -1;
-            printf("%d SENDING DIE\n", getpid());
-            for(i = 0; i < _NUMBER_OF_CHILDREN; i++) {
-              if (write(pipe, &sd_current, sizeof(int)) == -1) {
-                perror("write pipe, error");
-              }
-            }
           }
-    		  close(sd_current);
+      		close(sd_current);
           execute = false;    // Terminate
     	  } else {
 
-              // Write sd_current to fifo
-              printf("%d SENDING DELIVERY\n", getpid());
-              if (write(pipe, &sd_current, sizeof(int)) == -1) {
-                perror("write pipe, error");
-              }
-            }
-          }
+          // Fork
+          if((pid = fork()) == 0) {
+            // CHILD ----------------------------------------------------
 
-        int status; // Don'r realy care about this one
-        for (i = 0; i < _NUMBER_OF_CHILDREN; i++) // We wait for all of them childs, not just one
-          wait(&status);
-        close(pipe);
-        unlink(config.fifoPath);
-      } else {
-        // CHILD -----------------------------------------------
-        while (execute) {
-          int sd_get;
-
-          printf("%d WAITING\n", getpid());
-          if (read(pipe, &sd_get, sizeof(int)) == -1) {
-            perror("read pipe, error");
-          }
-          printf("%d ACCEPTED DELIVERY: %d\n", getpid(), sd_get);
-
-          if (sd_get >= 0) {
             // Shit happens, if server is out of memory just skip the request
             struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
             if (args == NULL) {
               sprintf(error, "Unable to allocate memory, %s", strerror(errno));
               log_server(LOG_CRIT, error);
-              close(sd_get);
+          		close(sd_current);
             } else {
               // Set arguments
-              args->sd      = sd_get;
+              args->sd      = sd_current;
               args->pin     = pin;
               args->config  = &config;
             }
+
+            // Call request handler
             requestHandle(args);
+            // Tell parent I'm done
+            pid_t id = getpid();
+            if (write(fifo, &id, sizeof(pid_t)) == -1) {
+                perror("write fifo, error");
+            }
+            execute = false;
+
+          } else if(pid > 0) {
+            // PARENT ---------------------------------------------------
+            // Parent don't handle dirty work
+            wait(NULL);
+            close(sd_current);
+          } else {
+            sprintf(error, "Unable to fork, %s", strerror(errno));
+            log_server(LOG_CRIT, error);
+            close(sd_current);
+            execute = false;    // Terminate
           }
         }
-        close(pipe);
+      } else {
+        // Get child pid from fifo and wait for it
+        pid_t child;
+        if (read(fifo, &child, sizeof(pid_t)) == -1) {
+          perror("read fifo, error");
+        }
+        waitpid(child, NULL, 0);
       }
+
+    }
   }
 
   // Else not a valid handling method
@@ -364,11 +363,11 @@ int main(int argc, char* argv[]) {
   }
 
   // Clean up
-  pthread_attr_destroy(&att);
   pthread_mutex_destroy(&thread_lock);
   close(sd);
   log_destroy();
-  printf("Cleanup complete, no one will know I was here.\n");
+  if (pid != 0)
+    printf("Cleanup complete, no one will know I was here.\n");
 
   return 0;
 }

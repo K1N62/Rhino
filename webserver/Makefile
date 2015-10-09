@@ -1,6 +1,6 @@
 CC = gcc
 LD = gcc
-INC_DIR = includes
+INC_DIR = include
 SRC_DIR = src
 OBJ_DIR = objects
 CFLAGS = -x c -ggdb -Wall -m64 -I$(INC_DIR)

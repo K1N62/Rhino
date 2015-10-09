@@ -96,7 +96,12 @@ bool hostnameToIp(char *hostname)
 
 void printHelp(void)
 {
-  printf("\n -h \t Print help text \n -p \t port, Select port to listen to \n -d \t Run webserver as a daemon \n -l \t logfile, Log to logfile \n    \t If not specified, logging will be output to syslog \n -s \t |thread|, Select request handling method \n -c \t absolute path to config, If not set process will try finding it\n\n");
+  printf("\n -h \t Print help text \n \
+  -p \t port, Select port to listen to \n \
+  -d \t Run webserver as a daemon \n \
+  -l \t logfile, Log to logfile \n\t If not specified, logging will be output to syslog \n \
+  -s \t (thread|fork), Select request handling method \n \
+  -c \t absolute path to config, If not set process will try finding it\n\n");
 }
 
 const char *getExt (const char *fspec) {
