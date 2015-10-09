@@ -28,23 +28,22 @@ int sendLine(int sd, char *tmp)
  */
 int sendHeader(int sd, const struct _rqhd_header *head)
 {
-	char tmp[128];
+	char buffert[4096];
+	char tmp[256];
 	char date[64];
 	time_t t = time(NULL);
 	memset(tmp, '\0', sizeof(tmp));
 	memset(date, '\0', sizeof(date));
+	memset(buffert, '\0', sizeof(buffert));
 
-	// Send header start
-	if( sendLine(sd, "\r\n") == -1 )
-		return -1;
+	// Header start
+	strcat(buffert, "\r\n");
 
 	// Status
 	if (head->protocol != NULL && head->status != NULL){
 		// Build string
 		sprintf(tmp, "%s %s\r\n", head->protocol, head->status);
-		// Send it
-		if(sendLine(sd, tmp) == -1)
-			return -1;
+		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Status header was not sent! Was this intentional?");
 	}
@@ -52,9 +51,7 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 	if (head->server != NULL) {
 		// Build string
 		sprintf(tmp, "Server: %s\r\n", head->server);
-		// Send it
-		if(sendLine(sd, tmp) == -1)
-			return -1;
+		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Server header was not sent! Was this intentional?");
 	}
@@ -62,9 +59,7 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 	if (head->size != 0) {
 		// Build string
 		sprintf(tmp, "Content-Length: %d\r\n", head->size);
-		// Send it
-		if(sendLine(sd, tmp) == -1)
-			return -1;
+		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Content-Length header was not sent! Was this intentional?");
 	}
@@ -72,9 +67,7 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 	if (head->type != NULL) {
 		// Build string
 		sprintf(tmp, "Content-Type: %s\r\n", head->type);
-		// Send it
-		if(sendLine(sd, tmp) == -1)
-			return -1;
+		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Content-Type header was not sent! Was this intentional?");
 	}
@@ -82,9 +75,7 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 	if (head->cache != NULL) {
 		// Build string
 		sprintf(tmp, "Cache-Control: %s\r\n", head->cache);
-		// Send it
-		if(sendLine(sd, tmp) == -1)
-			return -1;
+		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Cache-Control header was not sent! Was this intentional?");
 	}
@@ -92,9 +83,7 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 	if (head->cache != NULL) {
 		// Build string
 		sprintf(tmp, "Last-Modified: %s\r\n", head->modified);
-		// Send it
-		if(sendLine(sd, tmp) == -1)
-			return -1;
+		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Last-Modified header was not sent! Was this intentional?");
 	}
@@ -103,12 +92,12 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 	strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&t));
 	// Build string
 	sprintf(tmp, "Date: %s\r\n", date);
-	// Send it
-	if(sendLine(sd, tmp) == -1)
-		return -1;
+	strcat(buffert, tmp);
+
 	// End of header
-	sprintf(tmp, "\r\n");
-	if(sendLine(sd, tmp) == -1)
+	strcat(buffert, "\r\n");
+
+	if(sendLine(sd, buffert) == -1)
 		return -1;
 	return 0;
 }
@@ -117,17 +106,17 @@ void *requestHandle(void *context)
 {
 
 	// Get the arguments
-	char 	buffert[PATH_MAX],
-				reqBuf[BUF_REQ],
-				date[64],
-				error[1024],
-				*req_line,
-				*req_token;
-	struct 	_rqhd_header head;
-	struct 	_rqhd_args *args = (struct _rqhd_args*) context;
-	struct 	_rqhd_req req;
-	struct 	sockaddr_in pin = args->pin;
-	struct 	stat stat_buf = {0};
+	char 	buffert[PATH_MAX] = {0},
+				reqBuf[BUF_REQ] = {0},
+				date[64] = {0},
+				error[1024] = {0},
+				*req_line = NULL,
+				*req_token = NULL;
+	struct 	_rqhd_header 	head;
+	struct 	_rqhd_req 		req;
+	struct 	_rqhd_args 		*args = (struct _rqhd_args*) context;
+	struct 	sockaddr_in 	pin = args->pin;
+	struct 	stat 					stat_buf = {0};
 	int			sd = args->sd;
 	FILE 		*reqFile = NULL;
 
@@ -165,7 +154,7 @@ void *requestHandle(void *context)
 			strncpy(req.method, req_token, BUF_VAL);
 
 			// Get uri
-			req_token = strtok(NULL, " ");
+			req_token = strtok(NULL, " ");printf("%s\n", req_token);
 			if (req_token != NULL) {
 				strncpy(req.uri, req_token, BUF_VAL);
 
@@ -264,7 +253,7 @@ void *requestHandle(void *context)
 	// Last-Modified
 	strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&stat_buf.st_ctime));
 	strncpy(head.modified, date, BUF_VAL);
-	
+
 	// Send header
 	if (sendHeader(sd, &head) == -1) {
 		sprintf(error, "Unable to send header, %s. Aborting", strerror(errno));

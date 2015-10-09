@@ -1,15 +1,15 @@
 
 #include "utility.h"
 
-void daemonfunc(const char *cmd)
+void daemonfunc()
 {
     int i;
     pid_t pid;
-    struct sigaction    sa;
+    struct sigaction sa;
 
     // Become a session leader to lose controlling TTY.
     if ((pid = fork()) < 0) {
-        perror(cmd);
+        perror("Can't fork");
         exit(-1);
     }
     else if (pid != 0) // Exit parent
@@ -41,13 +41,6 @@ void daemonfunc(const char *cmd)
 
     // Clear file creation mask.
     umask(0);
-
-    // Change the current working directory to the root so
-    // we won't prevent file systems from being unmounted.
-    if (chdir("/") < 0){
-        perror("Can't change to /");
-        exit(-1);
-    }
 
     // Close all open file descriptors that's inherited from the parent
     // Including stdin, stdout, stderr

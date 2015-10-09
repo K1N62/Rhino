@@ -10,7 +10,13 @@
 
 #define RESOLVE_FAILED 0
 
-void daemonfunc(const char *cmd);
+/* Deamon function
+ *
+ * Daemonizes the process
+ *
+ * @return    void
+ */
+void daemonfunc();
 
 /*  Starts With
  *

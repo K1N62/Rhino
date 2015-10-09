@@ -12,8 +12,11 @@
   Copyright 2015
 
 TODO:
-  Fix deamon with fork
-  Broken pipe
+
+BUGS:
+  Broken pipe, maybe fixed
+  Unique deamon
+  corrupted request with concurent connections
 */
 
 #include "httpd.h"
@@ -74,10 +77,12 @@ int main(int argc, char* argv[]) {
   if(argc > 1) {
     for(i = 1; i < argc; i++) {
       switch(argv[i][1]) {
+        // Help
         case 'h':
           printHelp();
           return 3;
           break;
+        // Port
         case 'p':
           i++;
           if(i >= argc) {
@@ -99,11 +104,13 @@ int main(int argc, char* argv[]) {
             return 3;
           }
           break;
+        // Deamonize
         case 'd':
           // Start daemon if set
           printf("Starting daemon...\n");
-          daemonfunc("daemon");
+          daemonfunc();
           break;
+        // Log file
         case 'l':
           i++;
           if(i >= argc) {
@@ -118,6 +125,7 @@ int main(int argc, char* argv[]) {
             return 3;
           }
           break;
+        // Mode of operation
         case 's':
           i++;
           if(i >= argc) {
@@ -267,15 +275,15 @@ int main(int argc, char* argv[]) {
           args->config  = &config;
         }
 
-          // Create thread
-          if(pthread_create(&handler, &att, requestHandle, args) != 0) {
-            sprintf(error, "Unable to start thread, %s", strerror(errno));
-            log_server(LOG_CRIT, error);
-            close(sd_current);
-            execute = false;    // Terminate
-          }
+        // Create thread
+        if(pthread_create(&handler, &att, requestHandle, args) != 0) {
+          sprintf(error, "Unable to start thread, %s", strerror(errno));
+          log_server(LOG_CRIT, error);
+          close(sd_current);
+          execute = false;    // Terminate
         }
       }
+    }
 
       // Destroy attributes
       pthread_attr_destroy(&att);
@@ -283,8 +291,6 @@ int main(int argc, char* argv[]) {
   // Else if handling method is set to fork
   else if(handlingMethod == _FORK) {
 
-    FD_SET(sd, &rfds);
-    FD_SET(fifo, &rfds);
     max_fd = sd;
     if (fifo > sd)
       max_fd = fifo;
@@ -292,10 +298,14 @@ int main(int argc, char* argv[]) {
     // Start accepting requests
     while(execute) {
 
+      FD_ZERO(&rfds);
+      FD_SET(sd, &rfds);
+      FD_SET(fifo, &rfds);
+
       // Accept request or handle child
       setval = select(max_fd + 1, &rfds, NULL, NULL, NULL);
 
-      if (setval == 1) {
+      if (FD_ISSET(sd, &rfds)) {
         // Accept a request from queue
         if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
           if (execute) {
@@ -321,21 +331,23 @@ int main(int argc, char* argv[]) {
               args->sd      = sd_current;
               args->pin     = pin;
               args->config  = &config;
-            }
 
-            // Call request handler
-            requestHandle(args);
+              // Call request handler
+              requestHandle(args);
+            }
             // Tell parent I'm done
             pid_t id = getpid();
             if (write(fifo, &id, sizeof(pid_t)) == -1) {
-                perror("write fifo, error");
+                sprintf(error, "Unable to send pid, %s", strerror(errno));
+                log_server(LOG_ERR, error);
             }
+
+            // Done
             execute = false;
 
           } else if(pid > 0) {
             // PARENT ---------------------------------------------------
             // Parent don't handle dirty work
-            wait(NULL);
             close(sd_current);
           } else {
             sprintf(error, "Unable to fork, %s", strerror(errno));
@@ -344,18 +356,26 @@ int main(int argc, char* argv[]) {
             execute = false;    // Terminate
           }
         }
-      } else {
+      } else if (FD_ISSET(fifo, &rfds)) {
         // Get child pid from fifo and wait for it
         pid_t child;
         if (read(fifo, &child, sizeof(pid_t)) == -1) {
-          perror("read fifo, error");
+          sprintf(error, "Unable to read pid, %s", strerror(errno));
+          log_server(LOG_ERR, error);
         }
         waitpid(child, NULL, 0);
+      } else if (setval == -1){
+        // Error
+        sprintf(error, "Select failed or was interrupted, %s", strerror(errno));
+        log_server(LOG_ERR, error);
+        execute = false;    // Terminate
       }
 
     }
-  }
 
+    // Close fifo
+    close(fifo);
+  }
   // Else not a valid handling method
   else {
     sprintf(error, "Invalid handling method is set");
