@@ -154,7 +154,7 @@ void *requestHandle(void *context)
 			strncpy(req.method, req_token, BUF_VAL);
 
 			// Get uri
-			req_token = strtok(NULL, " ");printf("%s\n", req_token);
+			req_token = strtok(NULL, " ");
 			if (req_token != NULL) {
 				strncpy(req.uri, req_token, BUF_VAL);
 

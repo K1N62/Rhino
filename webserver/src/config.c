@@ -169,6 +169,22 @@ int parseConfig(struct configuration *config)
           }
         }
       }
+      else if (startsWith("Fifo_path", line + lineIndex))
+      {
+        // Move pass variable name
+        lineIndex += strlen("Fifo_path:");
+
+        readValue(lineIndex, line, value, sizeof(value));
+
+        // relative the root dir
+        sprintf(buffert, "%s/%s", config->rootDir, value);
+
+        // Get the realpath
+        realpath(buffert, realPathBuff);
+
+        // Change srvLogPath to the realpath
+        strncpy(config->fifoPath, realPathBuff, BUF_CFG);
+      }
     }
   }
 
