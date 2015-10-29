@@ -1,2 +1,3 @@
 # server
-This is the server that will change the world, mostly not, but hopefully..
+
+Rhino is a simple HTTP/1.0 webserver

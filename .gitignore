@@ -6,8 +6,8 @@
 *.exe
 *.o
 *.so
-webserver/bin/**
-webserver/objects/**
+webserver/bin
+webserver/objects
 
 # Packages #
 ############

@@ -3,18 +3,19 @@ LD = gcc
 INC_DIR = include
 SRC_DIR = src
 OBJ_DIR = objects
-CFLAGS = -x c -ggdb -Wall -m64 -I$(INC_DIR)
+BIN_DIR = bin
+CFLAGS = -c -Wall -m64 -I$(INC_DIR)
 LDFLAGS =
-SRCS = $(SRC_DIR)/globalConfigVariables.c $(SRC_DIR)/utility.c $(SRC_DIR)/config.c $(SRC_DIR)/log.c $(SRC_DIR)/httpd.c $(SRC_DIR)/request.h $(SRC_DIR)/pathHandler.c
-OBJS = $(OBJ_DIR)/globalConfigVariables.o $(OBJ_DIR)/utility.o $(OBJ_DIR)/config.o $(OBJ_DIR)/log.o $(OBJ_DIR)/httpd.o $(OBJ_DIR)/request.o $(OBJ_DIR)/pathHandler.o -lpthread
-# To include all files in dir
-#SRCS = $(wildcard $(SRC_DIR)/*.c)
-#OBJS = $(addprefix $(OBJ_DIR)/,$(notdir $(SRCS:.c=.o))) -lpthread
-PROG = bin/httpd
+
+PROG = $(BIN_DIR)/httpd
 RM = /bin/rm
+MKDIR = /bin/mkdir
+
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(addprefix $(OBJ_DIR)/,$(notdir $(SRCS:.c=.o))) -lpthread
 
 # Compile all
-all: $(PROG)
+all: dir_tree $(PROG)
 
 $(PROG): $(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $(PROG)
@@ -22,6 +23,9 @@ $(PROG): $(OBJS)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+dir_tree:
+	$(MKDIR) $(OBJ_DIR) $(BIN_DIR)
+
 #clean
 clean:
-	$(RM) $(PROG) $(OBJS)
+	$(RM) $(PROG) $(OBJ_DIR)/$(OBJS)
