@@ -4,7 +4,7 @@ INC_DIR = include
 SRC_DIR = src
 OBJ_DIR = objects
 BIN_DIR = bin
-CFLAGS = -c -Wall -m64 -I$(INC_DIR)
+CFLAGS 	= -c -Wall -m64 -I$(INC_DIR)
 LDFLAGS =
 
 PROG = $(BIN_DIR)/httpd
@@ -24,7 +24,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 dir_tree:
-	$(MKDIR) $(OBJ_DIR) $(BIN_DIR)
+	$(MKDIR) -p $(OBJ_DIR) $(BIN_DIR)
 
 #clean
 clean:
