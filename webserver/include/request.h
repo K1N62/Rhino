@@ -4,23 +4,28 @@
  * Handles requests
  */
 
+#ifndef _REQUEST_HEADER_
+#define _REQUEST_HEADER_
 #pragma once
 
 #include "httpd.h"
 
+#ifndef BUF_REQ
 #define BUF_REQ 1024
+#endif
+
 #define DIE_CON fclose(reqFile); \
                 close(sd); \
                 free(args); \
                 return NULL;
 //pthread_exit(NULL); libgcc required?
 
-#define _REQ_OK   "200" // OK
-#define _REQ_BAD  "400" // Bad Request
-#define _REQ_FBN  "403" // Forbidden
-#define _REQ_NFD  "404" // Not Found
-#define _REQ_ISE  "500" // Internal Server Error
-#define _REQ_NIM  "501" // Not Implemented
+#define HTTP_OK               200
+#define HTTP_BAD              400
+#define HTTP_FORBIDDEN        403
+#define HTTP_NOT_FOUND        404
+#define HTTP_INTERNAL_ERROR   500
+#define HTTP_NOT_IMPLEMENTED  501
 
 /* Request Handle
  *
@@ -30,3 +35,5 @@
  * @return      void
  */
 void *requestHandle(void *context);
+
+#endif

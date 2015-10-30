@@ -1,4 +1,6 @@
 
+#ifndef _CONFIG_HEADER_
+#define _CONFIG_HEADER_
 #pragma once
 
 #include "httpd.h"
@@ -9,4 +11,6 @@
  *
  * @return    int, error code if ant, 0 if OK
  */
-int parseConfig(struct configuration *config);
+int parseConfig(configuration *config);
+
+#endif

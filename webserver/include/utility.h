@@ -4,11 +4,15 @@
  * Declares utility functions that will be used
  */
 
+#ifndef _UTILITY_HEADER_
+#define _UTILITY_HEADER_
 #pragma once
 
 #include "httpd.h"
 
+#ifndef RESLOVE_FAILED
 #define RESOLVE_FAILED 0
+#endif
 
 /* Deamon function
  *
@@ -60,3 +64,5 @@ bool hostnameToIp(char *hostname);
  *  Print help to user
  */
 void printHelp(void);
+
+#endif

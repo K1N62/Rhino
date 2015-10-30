@@ -26,7 +26,7 @@ int sendLine(int sd, char *tmp)
  * @rqhd			struct, see header file for information
  * @return		int, -1 if error
  */
-int sendHeader(int sd, const struct _rqhd_header *head)
+int sendHeader(int sd, const _rqhd_header *head)
 {
 	char buffert[4096];
 	char tmp[256];
@@ -37,8 +37,6 @@ int sendHeader(int sd, const struct _rqhd_header *head)
 	memset(buffert, '\0', sizeof(buffert));
 
 	// Header start
-	strcat(buffert, "\r\n");
-
 	// Status
 	if (head->protocol != NULL && head->status != NULL){
 		// Build string
@@ -112,9 +110,9 @@ void *requestHandle(void *context)
 				error[1024] = {0},
 				*req_line = NULL,
 				*req_token = NULL;
-	struct 	_rqhd_header 	head;
-	struct 	_rqhd_req 		req;
-	struct 	_rqhd_args 		*args = (struct _rqhd_args*) context;
+	_rqhd_header 	head;
+	_rqhd_req 		req;
+	_rqhd_args 		*args = (_rqhd_args*) context;
 	struct 	sockaddr_in 	pin = args->pin;
 	struct 	stat 					stat_buf = {0};
 	int			sd = args->sd;
@@ -158,6 +156,7 @@ void *requestHandle(void *context)
 			if (req_token != NULL) {
 				strncpy(req.uri, req_token, BUF_VAL);
 
+				/* Dosent matter
 				// Get Protocol
 				req_token = strtok(NULL, " ");
 				if (req_token != NULL) {
@@ -166,60 +165,61 @@ void *requestHandle(void *context)
 
 				} else {
 					// If no protocol set 400 Bad Request
-					strncpy(head.status, "400 Bad Request", BUF_VAL);
+					strncpy(head.status, "400 Bad Request", sizeof(head.status));
 					req.error = true;
-					strncpy(req.path, "/errpg/400.html", BUF_VAL);
-				}
+					strncpy(req.path, "/errpg/400.html", sizeof(req.path));
+				}*/
+				strncpy(req.protocol, "HTTP/1.0", BUF_VAL);
 			} else {
 				// If no uri set 400 Bad Request
-				strncpy(head.status, "400 Bad Request", BUF_VAL);
+				strncpy(head.status, "400 Bad Request", sizeof(head.status));
 				req.error = true;
-				strncpy(req.path, "/errpg/400.html", BUF_VAL);
+				strncpy(req.path, "/errpg/400.html", sizeof(req.path));
 			}
 		} else {
 			// If invalid method set 501 Not Implemented
-			strncpy(head.status, "501 Not Implemented", BUF_VAL);
+			strncpy(head.status, "501 Not Implemented", sizeof(head.status));
 			req.error = true;
-			strncpy(req.path, "/errpg/501.html", BUF_VAL);
+			strncpy(req.path, "/errpg/501.html", sizeof(req.path));
 		}
 	} else {
 		// If no method set 400 Bad Request
-		strncpy(head.status, "400 Bad Request", BUF_VAL);
+		strncpy(head.status, "400 Bad Request", sizeof(head.status));
 		req.error = true;
-		strncpy(req.path, "/errpg/400.html", BUF_VAL);
+		strncpy(req.path, "/errpg/400.html", sizeof(req.path));
 	}
 
 	// If '/' was only character in uri set index
 	if (strcmp(req.uri, "/") == 0) {
-		strncpy(req.path, "/index.html", BUF_VAL);
+		strncpy(req.path, "/index.html", sizeof(req.path));
 	}
 	// Else set the requested path unless the request is bad
 	else if(!req.error) {
-		strncpy(req.path, req.uri, BUF_VAL);
+		strncpy(req.path, req.uri, sizeof(req.path));
 	}
 
 	// Check if file exists with realpath
 	if (realpath(req.path, buffert) == NULL) {
 		// If file does not exists
-		sprintf(error, "%s was not found, sending error page instead", req.path);
+		snprintf(error, sizeof(error), "%s was not found, sending error page instead", req.path);
 		log_server(LOG_INFO, error);
-		strncpy(head.status, "404 Not Found", BUF_VAL);
+		strncpy(head.status, "404 Not Found", sizeof(head.status));
 		req.error = true;
 		// Load error page instead
-		strncpy(req.path, "/errpg/404.html", BUF_VAL);
+		strncpy(req.path, "/errpg/404.html", sizeof(req.path));
 		realpath(req.path, buffert);
 	}
 	// If file exists and there was no error set status to 200
 	else if(!req.error) {
-		strncpy(head.status, "200 OK", BUF_VAL);
+		strncpy(head.status, "200 OK", sizeof(head.status));
 	}
 
 	// Open the file
 	if ((reqFile = fopen(buffert, "r")) == NULL) {
 		// If we can't open the file send 500
 		req.error = true;
-		strncpy(head.status, "500 Internal Server Error", BUF_VAL);
-		strncpy(head.protocol, "HEAD", BUF_VAL);
+		strncpy(head.status, "500 Internal Server Error", sizeof(head.status));
+		strncpy(head.protocol, "HEAD", sizeof(head.protocol));
 	}
 
 	// Get the file size
@@ -229,30 +229,30 @@ void *requestHandle(void *context)
 
 	// HEADER -------------------------------------
 	// Server name
-	strncpy(head.server, _NAME" "_VERSION, BUF_VAL);
+	strncpy(head.server, _SERVER_NAME" "_SERVER_VERSION, sizeof(head.server));
 	// Protocol
-	strncpy(head.protocol, "HTTP/"_HTTP_VER, BUF_VAL);
+	strncpy(head.protocol, "HTTP/"_SERVER_HTTP_VER, sizeof(head.protocol));
 	// Type
 	if (strcmp(getExt(req.uri), ".png") == 0) {
-		strncpy(head.type, "image/png", BUF_VAL);
+		strncpy(head.type, "image/png", sizeof(head.type));
 	} else if (strcmp(getExt(req.uri), ".jpg") == 0) {
-		strncpy(head.type, "image/jpg", BUF_VAL);
+		strncpy(head.type, "image/jpg", sizeof(head.type));
 	} else if (strcmp(getExt(req.uri), ".gif") == 0) {
-		strncpy(head.type, "image/gif", BUF_VAL);
+		strncpy(head.type, "image/gif", sizeof(head.type));
 	} else if (strcmp(getExt(req.uri), ".css") == 0) {
-		strncpy(head.type, "text/css", BUF_VAL);
+		strncpy(head.type, "text/css", sizeof(head.type));
 	} else if (strcmp(getExt(req.uri), ".js") == 0) {
-		strncpy(head.type, "application/javascript", BUF_VAL);
+		strncpy(head.type, "application/javascript", sizeof(head.type));
 	} else if (strcmp(getExt(req.uri), ".html") == 0) {
-		strncpy(head.type, "text/html", BUF_VAL);
+		strncpy(head.type, "text/html", sizeof(head.type));
 	}
 	// Size
 	head.size	= (int)stat_buf.st_size;
 	// Cache
-	strncpy(head.cache, "public", BUF_VAL);
+	strncpy(head.cache, "public", sizeof(head.cache));
 	// Last-Modified
 	strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&stat_buf.st_ctime));
-	strncpy(head.modified, date, BUF_VAL);
+	strncpy(head.modified, date, sizeof(head.modified));
 
 	// Send header
 	if (sendHeader(sd, &head) == -1) {

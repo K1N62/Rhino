@@ -35,7 +35,7 @@ void readValue(size_t lineIndex, char *line, char *value, size_t size)
   value[counter] = '\0';
 }
 
-int parseConfig(struct configuration *config)
+int parseConfig(configuration *config)
 {
   FILE *configFile;
   char buffert[PATH_MAX], realPathBuff[PATH_MAX];

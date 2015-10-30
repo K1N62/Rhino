@@ -1,7 +1,7 @@
 
 #include "log.h"
 
-int log_init(struct configuration *config)
+int log_init(configuration *config)
 {
   // Open access log
   if ((_log_access_fd = fopen(config->accLogPath, "a+")) == NULL) {
@@ -28,7 +28,7 @@ void log_destroy()
   fclose(_log_server_fd);
 }
 
-void log_access(const struct sockaddr_in *addr, const struct _rqhd_req *request, const struct _rqhd_header *header)
+void log_access(const struct sockaddr_in *addr, const _rqhd_req *request, const _rqhd_header *header)
 {
   time_t t = time(NULL);
   char  entry[4096],

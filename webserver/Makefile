@@ -1,10 +1,11 @@
 CC = gcc
 LD = gcc
 INC_DIR = include
-SRC_DIR = src
+SRC_DIR = source
 OBJ_DIR = objects
 BIN_DIR = bin
-CFLAGS 	= -c -Wall -m64 -I$(INC_DIR)
+LOG_DIR = log
+CFLAGS 	= -c -Wall -m64 -I $(INC_DIR)
 LDFLAGS =
 
 PROG = $(BIN_DIR)/httpd
@@ -24,7 +25,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 dir_tree:
-	$(MKDIR) -p $(OBJ_DIR) $(BIN_DIR)
+	$(MKDIR) -p $(OBJ_DIR) $(BIN_DIR) $(LOG_DIR)
 
 #clean
 clean:

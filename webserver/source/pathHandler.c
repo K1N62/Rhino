@@ -1,7 +1,7 @@
 
 #include "pathHandler.h"
 
-void path_init(struct configuration *config)
+void path_init(configuration *config)
 {
   _path_config = config;
 }

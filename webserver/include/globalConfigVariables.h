@@ -7,8 +7,12 @@
  *
  */
 
+#ifndef _GCV_HEADER_
+#define _GCV_HEADER_
 #pragma once
 
 #include "httpd.h"
 
-void setDefaultConfig(struct configuration *config);
+void setDefaultConfig(configuration *config);
+
+#endif

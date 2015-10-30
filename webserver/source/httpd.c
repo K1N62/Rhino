@@ -17,6 +17,7 @@ BUGS:
   Broken pipe, maybe fixed
   Unique deamon
   corrupted request with concurent connections
+
 */
 
 #include "httpd.h"
@@ -37,7 +38,7 @@ int main(int argc, char* argv[]) {
   // Variable declarations
   int i, port, sd_current, addrlen, handlingMethod, fifo, setval, max_fd;
   struct sockaddr_in sin, pin;
-  struct configuration config;
+  configuration config;
   char error[1024];
   pthread_t handler;
   pthread_attr_t att;
@@ -263,7 +264,7 @@ int main(int argc, char* argv[]) {
   	  } else {
 
         // Shit happens, if server is out of memory just skip the request
-        struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
+        _rqhd_args *args = malloc(sizeof(_rqhd_args));
         if (args == NULL) {
           sprintf(error, "Unable to allocate memory, %s", strerror(errno));
           log_server(LOG_CRIT, error);
@@ -321,7 +322,7 @@ int main(int argc, char* argv[]) {
             // CHILD ----------------------------------------------------
 
             // Shit happens, if server is out of memory just skip the request
-            struct _rqhd_args *args = malloc(sizeof(struct _rqhd_args));
+            _rqhd_args *args = malloc(sizeof(_rqhd_args));
             if (args == NULL) {
               sprintf(error, "Unable to allocate memory, %s", strerror(errno));
               log_server(LOG_CRIT, error);

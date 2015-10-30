@@ -4,14 +4,21 @@
  * Includes headers important for the project
  */
 
+#ifndef _HTTPD_HEADER_
+#define _HTTPD_HEADER_
 #pragma once
 
-#define _NAME     "Rhino"
-#define _VERSION  "1.0"
-#define _HTTP_VER "1.0"
+#define _SERVER_NAME     "Rhino"
+#define _SERVER_VERSION  "1.1"
+#define _SERVER_HTTP_VER "1.0"
 
+#ifndef _THREAD
 #define _THREAD   0
+#endif
+
+#ifndef _FORK
 #define _FORK     1
+#endif
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -47,3 +54,5 @@ pthread_mutex_t thread_lock;
 #include "log.h"
 #include "utility.h"
 #include "request.h"
+
+#endif

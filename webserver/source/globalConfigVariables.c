@@ -1,7 +1,7 @@
 
 #include "globalConfigVariables.h"
 
-void setDefaultConfig(struct configuration *config)
+void setDefaultConfig(configuration *config)
 {
   strcpy(config->servername,  "127.0.0.1");
   strcpy(config->rootDir,     "");
