@@ -2,9 +2,7 @@ language: cpp
 
 compiler: gcc
 
-install: make all
-
 before_script:
   - cd webserver
 
-script: make
+script: make all
