@@ -1,5 +1,5 @@
 
-https://travis-ci.org/K1N62/Rhino.svg?branch=master
+![Build Status](https://travis-ci.org/K1N62/Rhino.svg?branch=master)
 
 # Rhino Webserver
 
