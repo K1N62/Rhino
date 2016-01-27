@@ -2,27 +2,49 @@
 
 #include "config.h"
 
+void yyerror(char *e) {
+  printf("%s\n", e);
+}
+
 int yywrap(void) {
   return 1;
 }
 
-/**
- * Read value (Private)
+/* Read value (Private)
  *
  * Reads a value from a config file line
  *
- * @param     size_t the line offset
- * @param     string the line to search in
- * @param     string the output array
- * @param     size_t size of the output array
- * @return    void
+ * @lineIndex    size_t, the line offset
+ * @line         string, the line to search in
+ * @value        string, the output array
+ * @size         size_t, size of the output array
+ * @return       void
  */
-void readValue(size_t lineIndex, char *line, char *value, size_t size);
+void readValue(size_t lineIndex, char *line, char *value, size_t size)
+{
+  // Set variables
+  size_t counter = 0;
 
+  // Ignore spaces
+  while (line[lineIndex] == ' ')
+    lineIndex++;
+
+  // Ignore quote marks
+  if (line[lineIndex] == '"')
+    lineIndex++;
+
+  // Get the entered value, stop at end quote, newline or end of buffer
+  while (line[lineIndex] != '"' && line[lineIndex] != '\n' && counter < (size - 1))
+  {
+    value[counter] = line[lineIndex];
+    counter++;
+    lineIndex++;
+  }
+  value[counter] = '\0';
+}
 
 int parseConfig(configuration *config)
 {
-
   FILE *configFile;
   char buffert[PATH_MAX], realPathBuff[PATH_MAX];
   char *line = NULL;
