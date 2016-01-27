@@ -1,5 +1,6 @@
 
-/* Log Header
+/**
+ * Log Header
  *
  *  Declares functions and macros for the log functions
  */

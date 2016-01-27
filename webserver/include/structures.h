@@ -1,8 +1,6 @@
-/*
-
-  Struct defenitions
-
-  */
+/**
+ * Struct definitions
+ */
 
 #ifndef _STRUCT_HEADER_
 #define _STRUCT_HEADER_
@@ -11,7 +9,7 @@
 #define BUF_CFG 4096
 #define BUF_VAL 256
 
-  /* Config structures */
+  //! Config structures
   typedef struct {
     char servername[BUF_CFG];
     char rootDir[BUF_CFG];
@@ -26,13 +24,14 @@
     bool syslog;
   } configuration;
 
-  /* Request structures */
+  //! Request handler, request arguments
   typedef struct {
     int sd;
     struct sockaddr_in pin;
     configuration *config;
   } _rqhd_args;
 
+  //! Request handler, respons header
   typedef struct {
     char protocol[BUF_VAL];
     char status[BUF_VAL];
@@ -43,6 +42,7 @@
     int   size;
   } _rqhd_header;
 
+  //! Request handler, request header
   typedef struct {
     char host[BUF_VAL];
     char userAgent[BUF_VAL];
@@ -50,6 +50,7 @@
     char referer[BUF_VAL];
   } _rqhd_req_head;
 
+  //! Request handler, request data
   typedef struct {
     char method[BUF_VAL];
     char uri[BUF_VAL];

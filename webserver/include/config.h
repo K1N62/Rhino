@@ -4,8 +4,10 @@
 #pragma once
 
 #include "httpd.h"
+#include "configScanner.h"
 
-/* Parse log file
+/**
+ * Parse log file
  *
  * Parses the log file and sets the global config variables
  *

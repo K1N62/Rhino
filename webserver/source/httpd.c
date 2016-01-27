@@ -1,12 +1,12 @@
 
-/*
+/**
          _____   _   _   ___   _   _    ____
         |  _ \\ | | | | |_ _| | \ | |  / _ \\
         | |_) | | |_| |  | |  |  \| | | | | |
         |  _ <  |  _  |  | |  | |\  | | |_| |
         |_| \_\ |_| |_| |___| |_| \_| \\___/
 
-         a brilliant HTTP/1.0 Webserver
+          a brilliant HTTP/1.0 Webserver
 
   Authors, Jim Ahlstrand & Lukas Landenstad
   Copyright 2015
