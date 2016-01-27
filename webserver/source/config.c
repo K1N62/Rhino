@@ -2,7 +2,12 @@
 
 #include "config.h"
 
-/* Read value (Private)
+int yywrap(void) {
+  return 1;
+}
+
+/**
+ * Read value (Private)
  *
  * Reads a value from a config file line
  *
@@ -13,30 +18,11 @@
  * @return       void
  */
 void readValue(size_t lineIndex, char *line, char *value, size_t size)
-{
-  // Set variables
-  size_t counter = 0;
 
-  // Ignore spaces
-  while (line[lineIndex] == ' ')
-    lineIndex++;
-
-  // Ignore quote marks
-  if (line[lineIndex] == '"')
-    lineIndex++;
-
-  // Get the entered value, stop at end quote, newline or end of buffer
-  while (line[lineIndex] != '"' && line[lineIndex] != '\n' && counter < (size - 1))
-  {
-    value[counter] = line[lineIndex];
-    counter++;
-    lineIndex++;
-  }
-  value[counter] = '\0';
-}
 
 int parseConfig(configuration *config)
 {
+  yyparse();
   FILE *configFile;
   char buffert[PATH_MAX], realPathBuff[PATH_MAX];
   char *line = NULL;

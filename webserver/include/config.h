@@ -4,6 +4,7 @@
 #pragma once
 
 #include "httpd.h"
+#include "configScanner.h"
 
 /* Parse log file
  *
