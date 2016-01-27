@@ -1,5 +1,6 @@
 
-/* Request header file
+/**
+ * Request header file
  *
  * Handles requests
  */
@@ -27,11 +28,12 @@
 #define HTTP_INTERNAL_ERROR   500
 #define HTTP_NOT_IMPLEMENTED  501
 
-/* Request Handle
+/**
+ * Request Handle
  *
  * Handles http requests
  *
- * @context     void, pointer to a dynamic allocated rqhdArgs struct
+ * @param     void, pointer to a dynamic allocated rqhdArgs struct
  * @return      void
  */
 void *requestHandle(void *context);

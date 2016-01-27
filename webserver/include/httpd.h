@@ -1,5 +1,6 @@
 
-/* Header file
+/**
+ * Header file
  *
  * Includes headers important for the project
  */

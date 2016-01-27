@@ -11,18 +11,18 @@ int yywrap(void) {
  *
  * Reads a value from a config file line
  *
- * @lineIndex    size_t, the line offset
- * @line         string, the line to search in
- * @value        string, the output array
- * @size         size_t, size of the output array
- * @return       void
+ * @param     size_t the line offset
+ * @param     string the line to search in
+ * @param     string the output array
+ * @param     size_t size of the output array
+ * @return    void
  */
 void readValue(size_t lineIndex, char *line, char *value, size_t size)
 
 
 int parseConfig(configuration *config)
 {
-  yyparse();
+
   FILE *configFile;
   char buffert[PATH_MAX], realPathBuff[PATH_MAX];
   char *line = NULL;
