@@ -11,6 +11,13 @@
 
 %%
 
+main:
+  main stmt
+  | /*empty*/
+  ;
 
+stmt:
+  /*empty*/
+  ;
 
 %%

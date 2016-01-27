@@ -17,7 +17,7 @@ int yywrap(void) {
  * @param     size_t size of the output array
  * @return    void
  */
-void readValue(size_t lineIndex, char *line, char *value, size_t size)
+void readValue(size_t lineIndex, char *line, char *value, size_t size);
 
 
 int parseConfig(configuration *config)

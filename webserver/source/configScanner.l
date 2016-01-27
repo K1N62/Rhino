@@ -1,6 +1,6 @@
 %{
 
-#include "configScanner.h"
+#include "configParser.h"
 
 %}
 

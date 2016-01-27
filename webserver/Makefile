@@ -9,6 +9,7 @@ CFLAGS 	= -c -Wall -m64 -I$(INC_DIR)
 LDFLAGS =
 
 LEX			= configScanner
+BISON		= configParser
 
 PROG = $(BIN_DIR)/httpd
 RM = /bin/rm
@@ -18,7 +19,7 @@ SRCS = $(wildcard $(SRC_DIR)/*.c)
 OBJS = $(addprefix $(OBJ_DIR)/,$(notdir $(SRCS:.c=.o))) -lpthread
 
 # Compile all
-all: dir_tree flex $(PROG)
+all: dir_tree bison flex $(PROG)
 
 $(PROG): $(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $(PROG)
@@ -28,6 +29,10 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 
 dir_tree:
 	$(MKDIR) -p $(OBJ_DIR) $(BIN_DIR) $(LOG_DIR)
+
+# create parser
+bison:
+	bison -o $(SRC_DIR)/$(BISON).c --defines=$(INC_DIR)/$(BISON).h $(SRC_DIR)/$(BISON).y
 
 # create scanner
 flex:
