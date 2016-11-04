@@ -40,7 +40,7 @@ int sendHeader(int sd, const _rqhd_header *head)
 	// Status
 	if (head->protocol != NULL && head->status != NULL){
 		// Build string
-		sprintf(tmp, "%s %s\r\n", head->protocol, head->status);
+		snprintf(tmp, sizeof(tmp), "%s %s\r\n", head->protocol, head->status);
 		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Status header was not sent! Was this intentional?");
@@ -48,7 +48,7 @@ int sendHeader(int sd, const _rqhd_header *head)
 	// Server
 	if (head->server != NULL) {
 		// Build string
-		sprintf(tmp, "Server: %s\r\n", head->server);
+		snprintf(tmp, sizeof(tmp), "Server: %s\r\n", head->server);
 		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Server header was not sent! Was this intentional?");
@@ -56,7 +56,7 @@ int sendHeader(int sd, const _rqhd_header *head)
 	// Content-Length
 	if (head->size != 0) {
 		// Build string
-		sprintf(tmp, "Content-Length: %d\r\n", head->size);
+		snprintf(tmp, sizeof(tmp), "Content-Length: %d\r\n", head->size);
 		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Content-Length header was not sent! Was this intentional?");
@@ -64,7 +64,7 @@ int sendHeader(int sd, const _rqhd_header *head)
 	// Content-Type
 	if (head->type != NULL) {
 		// Build string
-		sprintf(tmp, "Content-Type: %s\r\n", head->type);
+		snprintf(tmp, sizeof(tmp), "Content-Type: %s\r\n", head->type);
 		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Content-Type header was not sent! Was this intentional?");
@@ -72,7 +72,7 @@ int sendHeader(int sd, const _rqhd_header *head)
 	// Cache-Control
 	if (head->cache != NULL) {
 		// Build string
-		sprintf(tmp, "Cache-Control: %s\r\n", head->cache);
+		snprintf(tmp, sizeof(tmp), "Cache-Control: %s\r\n", head->cache);
 		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Cache-Control header was not sent! Was this intentional?");
@@ -80,7 +80,7 @@ int sendHeader(int sd, const _rqhd_header *head)
 	// Last-Modified
 	if (head->cache != NULL) {
 		// Build string
-		sprintf(tmp, "Last-Modified: %s\r\n", head->modified);
+		snprintf(tmp, sizeof(tmp), "Last-Modified: %s\r\n", head->modified);
 		strcat(buffert, tmp);
 	} else {
 		log_server(LOG_INFO, "Last-Modified header was not sent! Was this intentional?");
@@ -89,7 +89,7 @@ int sendHeader(int sd, const _rqhd_header *head)
 	// Get date
 	strftime(date, sizeof(date), "%a, %d %b %Y %T %z", localtime(&t));
 	// Build string
-	sprintf(tmp, "Date: %s\r\n", date);
+	snprintf(tmp, sizeof(tmp), "Date: %s\r\n", date);
 	strcat(buffert, tmp);
 
 	// End of header
@@ -110,30 +110,32 @@ void *requestHandle(void *context)
 				error[1024] = {0},
 				*req_line = NULL,
 				*req_token = NULL;
+
 	_rqhd_header 	head;
 	_rqhd_req 		req;
 	_rqhd_args 		*args = (_rqhd_args*) context;
-	struct 	sockaddr_in 	pin = args->pin;
-	struct 	stat 					stat_buf = {0};
-	int			sd = args->sd;
-	FILE 		*reqFile = NULL;
+
+	struct 	sockaddr_in pin = args->pin;
+	struct 	stat stat_buf = {0};
+	int		sd = args->sd;
+	FILE 	*reqFile = NULL;
 
 	// Init variables
 	head.protocol[0] 	= '\0';
 	head.status[0] 		= '\0';
 	head.server[0] 		= '\0';
-	head.type[0] 			= '\0';
+	head.type[0] 		= '\0';
 	head.cache[0] 		= '\0';
 	head.modified[0] 	= '\0';
-	head.size 				= 0;
+	head.size 			= 0;
 	req.method[0] 		= '\0';
-	req.uri[0] 				= '\0';
+	req.uri[0] 			= '\0';
 	req.protocol[0] 	= '\0';
-	req.error					= false;
+	req.error			= false;
 
   // Recieve the data, thank you
   if (recv(sd, reqBuf, sizeof(reqBuf), 0) == -1) {
-		sprintf(error, "Unable to recieve request, %s", strerror(errno));
+		snprintf(error, sizeof(error), "Unable to recieve request, %s", strerror(errno));
 		log_server(LOG_ERR, error);
 		// Cleanup
     close(sd);
@@ -148,7 +150,7 @@ void *requestHandle(void *context)
 	// Check if GET or HEAD is set
 	req_token = strtok(req_line, " ");
 	if (req_token != NULL) {
-		if (strcmp(req_token, "GET") == 0 || strcmp(req_token, "HEAD") == 0) {
+		if (strncmp(req_token, "GET", 3) == 0 || strncmp(req_token, "HEAD", 4) == 0) {
 			strncpy(req.method, req_token, BUF_VAL);
 
 			// Get uri
@@ -190,7 +192,7 @@ void *requestHandle(void *context)
 	}
 
 	// If '/' was only character in uri set index
-	if (strcmp(req.uri, "/") == 0) {
+	if (strncmp(req.uri, "/", 1) == 0) {
 		strncpy(req.path, "/index.html", sizeof(req.path));
 	}
 	// Else set the requested path unless the request is bad
@@ -233,17 +235,17 @@ void *requestHandle(void *context)
 	// Protocol
 	strncpy(head.protocol, "HTTP/"_SERVER_HTTP_VER, sizeof(head.protocol));
 	// Type
-	if (strcmp(getExt(req.uri), ".png") == 0) {
+	if (strncmp(getExt(req.uri), ".png", 4) == 0) {
 		strncpy(head.type, "image/png", sizeof(head.type));
-	} else if (strcmp(getExt(req.uri), ".jpg") == 0) {
+	} else if (strncmp(getExt(req.uri), ".jpg", 4) == 0) {
 		strncpy(head.type, "image/jpg", sizeof(head.type));
-	} else if (strcmp(getExt(req.uri), ".gif") == 0) {
+	} else if (strncmp(getExt(req.uri), ".gif", 4) == 0) {
 		strncpy(head.type, "image/gif", sizeof(head.type));
-	} else if (strcmp(getExt(req.uri), ".css") == 0) {
+	} else if (strncmp(getExt(req.uri), ".css", 4) == 0) {
 		strncpy(head.type, "text/css", sizeof(head.type));
-	} else if (strcmp(getExt(req.uri), ".js") == 0) {
+	} else if (strncmp(getExt(req.uri), ".js", 3) == 0) {
 		strncpy(head.type, "application/javascript", sizeof(head.type));
-	} else if (strcmp(getExt(req.uri), ".html") == 0) {
+	} else if (strncmp(getExt(req.uri), ".html", 5) == 0) {
 		strncpy(head.type, "text/html", sizeof(head.type));
 	}
 	// Size
@@ -256,16 +258,16 @@ void *requestHandle(void *context)
 
 	// Send header
 	if (sendHeader(sd, &head) == -1) {
-		sprintf(error, "Unable to send header, %s. Aborting", strerror(errno));
+		snprintf(error, sizeof(error), "Unable to send header, %s. Aborting", strerror(errno));
 		log_server(LOG_WARNING, error);
 		DIE_CON
 	}
 	// -------------------------------------------------------------------------
 
 	// Send the requested file if method is GET
-	if (strcmp(req.method, "GET") == 0) {
+	if (strncmp(req.method, "GET", 3) == 0) {
 		if (sendfile(sd, fileno(reqFile), NULL, stat_buf.st_size) == -1)	{
-      sprintf(error, "Unable to send requested file, %s. Aborting", strerror(errno));
+      snprintf(error, sizeof(error), "Unable to send requested file, %s. Aborting", strerror(errno));
       log_server(LOG_WARNING, error);
 			DIE_CON
 		}
