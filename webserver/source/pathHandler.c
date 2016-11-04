@@ -27,7 +27,7 @@ char* getRelRoot(char *path)
   // Get the realpath
   retPath = realpath(buffert, NULL);
   if(retPath == NULL){
-    printf("Unable to resolve path: %s, %s\n", buffert, strerror(errno));
+    sprintf("Unable to resolve path: %s, %s\n", buffert, strerror(errno));
     return NULL;
   }
   else {
