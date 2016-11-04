@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
             return 3;
           }
           if(argv[i][0] != '-') {
-            strcpy(config.accLogPath, argv[i]);
+            strncpy(config.accLogPath, argv[i], sizeof(config.accLogPath));
           }
           else {
             printHelp();
@@ -133,9 +133,9 @@ int main(int argc, char* argv[]) {
             printHelp();
             return 3;
           }
-          if(strcmp(argv[i], "thread") == 0)
+          if(strncmp(argv[i], "thread", 6) == 0)
             handlingMethod = _THREAD;
-          else if(strcmp(argv[i], "fork") == 0)
+          else if(strncmp(argv[i], "fork", 4) == 0)
             handlingMethod = _FORK;
           else {
             printHelp();
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
             return 3;
           }
           if(argv[i][0] != '-') {
-            strcpy(config.configPath, argv[i]);
+            strncpy(config.configPath, argv[i], sizeof(config.configPath));
           }
           else {
             printHelp();

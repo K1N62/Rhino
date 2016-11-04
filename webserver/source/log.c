@@ -111,7 +111,7 @@ void log_server(int error, char *errorMessage)
   }
   else {
     // Set the entry
-    sprintf(entry, "[%s] \"%s %s\"\n", date, logLevel, errorMessage);
+    snprintf(entry, sizeof(entry), "[%s] \"%s %s\"\n", date, logLevel, errorMessage);
     // Get mutex and print to log
     pthread_mutex_lock(&thread_lock);
     fputs(entry, _log_server_fd);

@@ -10,14 +10,11 @@ void rootDir(char *path)
 {
   char *folder = PATH_BIN;
   char pathBuffert[PATH_MAX];
-  size_t size;
 
   realpath(path, pathBuffert);
 
-  size = strlen(pathBuffert);
-
-  pathBuffert[size - strlen(folder)] = '\0';
-  strcpy(_path_config->rootDir, pathBuffert);
+  pathBuffert[strlen(pathBuffert) - strlen(folder)] = '\0';
+  strncpy(_path_config->rootDir, pathBuffert, sizeof(_path_config->rootDir));
 }
 
 char* getRelRoot(char *path)
@@ -30,7 +27,7 @@ char* getRelRoot(char *path)
   // Get the realpath
   retPath = realpath(buffert, NULL);
   if(retPath == NULL){
-    printf("Unable to resolve path: %s, %s\n", buffert, strerror(errno));
+    sprintf("Unable to resolve path: %s, %s\n", buffert, strerror(errno));
     return NULL;
   }
   else {

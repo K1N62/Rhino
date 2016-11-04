@@ -29,4 +29,4 @@ dir_tree:
 
 #clean
 clean:
-	$(RM) $(PROG) $(OBJ_DIR)/$(OBJS)
+	$(RM) -f $(PROG) $(OBJ_DIR)/*
