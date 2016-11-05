@@ -192,7 +192,7 @@ void *requestHandle(void *context)
 	}
 
 	// If '/' was only character in uri set index
-	if (strncmp(req.uri, "/", 1) == 0) {
+	if (strncmp(req.uri, "/\0", 2) == 0) {
 		strncpy(req.path, "/index.html", sizeof(req.path));
 	}
 	// Else set the requested path unless the request is bad
