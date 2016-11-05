@@ -22,12 +22,12 @@ char* getRelRoot(char *path)
   char buffert[PATH_MAX], *retPath;
 
   // relative the root dir
-  sprintf(buffert, "%s/%s", _path_config->rootDir, path);
+  snprintf(buffert, sizeof(buffert), "%s/%s", _path_config->rootDir, path);
 
   // Get the realpath
   retPath = realpath(buffert, NULL);
   if(retPath == NULL){
-    sprintf("Unable to resolve path: %s, %s\n", buffert, strerror(errno));
+    printf("Unable to resolve path: %s, %s\n", buffert, strerror(errno));
     return NULL;
   }
   else {

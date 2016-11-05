@@ -171,7 +171,7 @@ int main(int argc, char* argv[]) {
       mkfifo(config.fifoPath, 0666);
       // Try opening the pipe
       if((fifo = open(config.fifoPath, O_RDWR)) == -1) {
-        sprintf(error, "Unable to open FIFO-pipe, %s", strerror(errno));
+        snprintf(error, sizeof(error), "Unable to open FIFO-pipe, %s", strerror(errno));
         log_server(LOG_CRIT, error);
         execute = false;    // Terminate
       }
@@ -186,19 +186,19 @@ int main(int argc, char* argv[]) {
   // Set root directory to document root
   chdir(config.basedir);
   if (chroot(config.basedir) == -1) {
-    sprintf(error, "Unable to change root directory, %s", strerror(errno));
+    snprintf(error, sizeof(error), "Unable to change root directory, %s", strerror(errno));
     log_server(LOG_ERR, error);
     execute = false;  // Terminate
   }
 
   // Drop root privileges
   if (setgid(getgid()) == -1) {
-    sprintf(error, "Unable to change user, %s", strerror(errno));
+    snprintf(error, sizeof(error), "Unable to change user, %s", strerror(errno));
     log_server(LOG_ERR, error);
     execute = false;  // Terminate
   }
   if (setuid(getuid()) == -1) {
-    sprintf(error, "Unable to change user, %s", strerror(errno));
+    snprintf(error, sizeof(error), "Unable to change user, %s", strerror(errno));
     log_server(LOG_ERR, error);
     execute = false;  // Terminate
   }
@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
   // Domain -> AF_INET = IPV4
   // Type -> SOCK_STREAM = TCP
   if((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-      sprintf(error, "Unable to open socket, %s", strerror(errno));
+      snprintf(error, sizeof(error), "Unable to open socket, %s", strerror(errno));
       log_server(LOG_ERR, error);
       execute = false;  // Terminate
   }
@@ -223,14 +223,14 @@ int main(int argc, char* argv[]) {
 
   // Try binding the socket
 	if(bind(sd, (struct sockaddr*) &sin, sizeof(sin)) == -1) {
-    sprintf(error, "Unable to bind socket, %s", strerror(errno));
+    snprintf(error, sizeof(error), "Unable to bind socket, %s", strerror(errno));
     log_server(LOG_ERR, error);
     execute = false;  // Terminate
 	}
 
   // Start to listen for requests
   if(listen(sd, config.backlog) == -1) {
-    sprintf(error, "Too loud unable to listen, %s", strerror(errno));
+    snprintf(error, sizeof(error), "Too loud unable to listen, %s", strerror(errno));
     log_server(LOG_ERR, error);
     execute = false;  // Terminate
 	}
@@ -256,7 +256,7 @@ int main(int argc, char* argv[]) {
       // Accept a request from queue, blocking
       if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
         if (execute) {
-          sprintf(error, "Unable to accept request, %s", strerror(errno));
+          snprintf(error, sizeof(error), "Unable to accept request, %s", strerror(errno));
           log_server(LOG_ERR, error);
         }
     		close(sd_current);
@@ -266,7 +266,7 @@ int main(int argc, char* argv[]) {
         // Shit happens, if server is out of memory just skip the request
         _rqhd_args *args = malloc(sizeof(_rqhd_args));
         if (args == NULL) {
-          sprintf(error, "Unable to allocate memory, %s", strerror(errno));
+          snprintf(error, sizeof(error), "Unable to allocate memory, %s", strerror(errno));
           log_server(LOG_CRIT, error);
       		close(sd_current);
         } else {
@@ -278,7 +278,7 @@ int main(int argc, char* argv[]) {
 
         // Create thread
         if(pthread_create(&handler, &att, requestHandle, args) != 0) {
-          sprintf(error, "Unable to start thread, %s", strerror(errno));
+          snprintf(error, sizeof(error), "Unable to start thread, %s", strerror(errno));
           log_server(LOG_CRIT, error);
           close(sd_current);
           execute = false;    // Terminate
@@ -310,7 +310,7 @@ int main(int argc, char* argv[]) {
         // Accept a request from queue
         if ((sd_current = accept(sd, (struct sockaddr*) &pin, (socklen_t*) &addrlen)) == -1) {
           if (execute) {
-            sprintf(error, "Unable to accept request, %s", strerror(errno));
+            snprintf(error, sizeof(error), "Unable to accept request, %s", strerror(errno));
             log_server(LOG_ERR, error);
           }
       		close(sd_current);
@@ -324,7 +324,7 @@ int main(int argc, char* argv[]) {
             // Shit happens, if server is out of memory just skip the request
             _rqhd_args *args = malloc(sizeof(_rqhd_args));
             if (args == NULL) {
-              sprintf(error, "Unable to allocate memory, %s", strerror(errno));
+              snprintf(error, sizeof(error), "Unable to allocate memory, %s", strerror(errno));
               log_server(LOG_CRIT, error);
           		close(sd_current);
             } else {
@@ -339,7 +339,7 @@ int main(int argc, char* argv[]) {
             // Tell parent I'm done
             pid_t id = getpid();
             if (write(fifo, &id, sizeof(pid_t)) == -1) {
-                sprintf(error, "Unable to send pid, %s", strerror(errno));
+                snprintf(error, sizeof(error), "Unable to send pid, %s", strerror(errno));
                 log_server(LOG_ERR, error);
             }
 
@@ -351,7 +351,7 @@ int main(int argc, char* argv[]) {
             // Parent don't handle dirty work
             close(sd_current);
           } else {
-            sprintf(error, "Unable to fork, %s", strerror(errno));
+            snprintf(error, sizeof(error), "Unable to fork, %s", strerror(errno));
             log_server(LOG_CRIT, error);
             close(sd_current);
             execute = false;    // Terminate
@@ -361,13 +361,13 @@ int main(int argc, char* argv[]) {
         // Get child pid from fifo and wait for it
         pid_t child;
         if (read(fifo, &child, sizeof(pid_t)) == -1) {
-          sprintf(error, "Unable to read pid, %s", strerror(errno));
+          snprintf(error, sizeof(error), "Unable to read pid, %s", strerror(errno));
           log_server(LOG_ERR, error);
         }
         waitpid(child, NULL, 0);
       } else if (setval == -1){
         // Error
-        sprintf(error, "Select failed or was interrupted, %s", strerror(errno));
+        snprintf(error, sizeof(error), "Select failed or was interrupted, %s", strerror(errno));
         log_server(LOG_ERR, error);
         execute = false;    // Terminate
       }
@@ -379,7 +379,7 @@ int main(int argc, char* argv[]) {
   }
   // Else not a valid handling method
   else {
-    sprintf(error, "Invalid handling method is set");
+    snprintf(error, sizeof(error), "Invalid handling method is set");
     log_server(LOG_ERR, error);
   }
 

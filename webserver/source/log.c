@@ -46,7 +46,7 @@ void log_access(const struct sockaddr_in *addr, const _rqhd_req *request, const 
   // Get the request
   // We only want the numbers
   strncpy(status, header->status, sizeof(status) - 1);
-  sprintf(req, "\"%s %s %s\" %s %d", request->method, request->uri, request->protocol, status, header->size);
+  snprintf(req, sizeof(req), "\"%s %s %s\" %s %d", request->method, request->uri, request->protocol, status, header->size);
 
   // Logs to syslog if set
   if(logToSyslog) {
@@ -56,7 +56,7 @@ void log_access(const struct sockaddr_in *addr, const _rqhd_req *request, const 
   }
   else {
     // Set the entry
-    sprintf(entry, "%s - - [%s] %s\n", ip, date, req);
+    snprintf(entry, sizeof(entry), "%s - - [%s] %s\n", ip, date, req);
     // Get mutex and print to log
     pthread_mutex_lock(&thread_lock);
     fputs(entry, _log_access_fd);

@@ -54,9 +54,10 @@ bool isValidIpAddress(char *ipAddress);
  *  Resolves an hostname to an ip address
  *  Overwrites hostname with the ip!
  * @hostname       string, the hostname to resolve
+ * @size       	   size_t, size of hostname
  * @return         bool, false if unsuccessfull
  */
-bool hostnameToIp(char *hostname);
+bool hostnameToIp(char *hostname, size_t size);
 
 /*  Print help
  *

@@ -43,7 +43,7 @@ int parseConfig(configuration *config)
   char value[256] = {'\0'};
   size_t  lineIndex = 0, len = sizeof(value);
 
-  sprintf(buffert, "%s/%s", config->rootDir, config->configPath);
+  snprintf(buffert, sizeof(buffert), "%s/%s", config->rootDir, config->configPath);
   realpath(buffert, realPathBuff);
 
   if ((configFile = fopen(realPathBuff, "r")) == NULL) {
@@ -75,7 +75,7 @@ int parseConfig(configuration *config)
           strncpy(config->servername,  value, BUF_CFG);
         }
         // Otherwise check if it's an valid domain name and resolve it
-        else if(hostnameToIp(value))
+        else if(hostnameToIp(value, sizeof(value)))
         {
           strncpy(config->servername,  value, BUF_CFG);
         }
@@ -112,7 +112,7 @@ int parseConfig(configuration *config)
         readValue(lineIndex, line, value, sizeof(value));
 
         // relative the root dir
-        sprintf(buffert, "%s/%s", config->rootDir, value);
+        snprintf(buffert, sizeof(buffert), "%s/%s", config->rootDir, value);
 
         // Get the realpath
         if(realpath(buffert, realPathBuff) == NULL){
@@ -143,7 +143,7 @@ int parseConfig(configuration *config)
             readValue(lineIndex, line, value, sizeof(value));
 
             // relative the root dir
-            sprintf(buffert, "%s/%s", config->rootDir, value);
+            snprintf(buffert, sizeof(buffert), "%s/%s", config->rootDir, value);
 
             // Get the realpath
             realpath(buffert, realPathBuff);
@@ -159,7 +159,7 @@ int parseConfig(configuration *config)
             readValue(lineIndex, line, value, sizeof(value));
 
             // relative the root dir
-            sprintf(buffert, "%s/%s", config->rootDir, value);
+            snprintf(buffert, sizeof(buffert), "%s/%s", config->rootDir, value);
 
             // Get the realpath
             realpath(buffert, realPathBuff);
@@ -177,7 +177,7 @@ int parseConfig(configuration *config)
         readValue(lineIndex, line, value, sizeof(value));
 
         // relative the root dir
-        sprintf(buffert, "%s/%s", config->rootDir, value);
+        snprintf(buffert, sizeof(buffert), "%s/%s", config->rootDir, value);
 
         // Get the realpath
         realpath(buffert, realPathBuff);

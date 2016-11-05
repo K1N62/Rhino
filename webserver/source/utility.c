@@ -64,7 +64,7 @@ bool isValidIpAddress(char *ipAddress)
     return result;
 }
 
-bool hostnameToIp(char *hostname)
+bool hostnameToIp(char *hostname, size_t size)
 {
     struct hostent *he;
     struct in_addr **addr_list;
@@ -80,7 +80,7 @@ bool hostnameToIp(char *hostname)
     for(i = 0; addr_list[i] != NULL; i++)
     {
         //Return the first one
-        strcpy(hostname , inet_ntoa(*addr_list[i]) );
+        strncpy(hostname, inet_ntoa(*addr_list[i]), size);
         return true;
     }
 
@@ -89,7 +89,8 @@ bool hostnameToIp(char *hostname)
 
 void printHelp(void)
 {
-  printf("\n -h \t Print help text \n \
+  printf("\n \
+  -h \t Print help text \n \
   -p \t port, Select port to listen to \n \
   -d \t Run webserver as a daemon \n \
   -l \t logfile, Log to logfile \n\t If not specified, logging will be output to syslog \n \
